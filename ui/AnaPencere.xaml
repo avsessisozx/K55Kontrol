@@ -1,0 +1,515 @@
+<Window x:Class="K55Kontrol.AnaPencere"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:yerel="clr-namespace:K55Kontrol"
+        Title="K55 Kontrol" Width="1180" Height="780" MinWidth="1000" MinHeight="640"
+        WindowStartupLocation="CenterScreen" Icon="/assets/K55Kontrol.ico"
+        Background="{StaticResource Arkaplan}" Foreground="{StaticResource Metin}"
+        FontFamily="{StaticResource Yazi}" UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="40" ResizeBorderThickness="6" GlassFrameThickness="0" CornerRadius="0"
+                      UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
+
+    <Grid x:Name="Kok">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="236"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Yan panel -->
+        <Border Background="{StaticResource YanPanel}" BorderBrush="{StaticResource Cizgi}" BorderThickness="0,0,1,0">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="22,22,0,26">
+                    <Border Width="38" Height="38" CornerRadius="10">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#FF4D6D" Offset="0"/>
+                                <GradientStop Color="#7A5CFF" Offset="0.5"/>
+                                <GradientStop Color="#22C3FF" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <TextBlock Text="&#xE765;" FontFamily="{StaticResource Simgeler}" FontSize="18" Foreground="White"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="K55 Kontrol" FontSize="17" FontWeight="SemiBold"/>
+                        <TextBlock Text="Corsair K55 RGB PRO" FontSize="11.5" Foreground="{StaticResource SolukMetin}"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel DockPanel.Dock="Bottom" Margin="14,0,14,16">
+                    <Border x:Name="IcueUyarisi" Background="{StaticResource UyariZemin}" CornerRadius="10" Padding="12"
+                            Margin="0,0,0,10" Visibility="Collapsed">
+                        <StackPanel>
+                            <TextBlock Text="iCUE açık" FontWeight="SemiBold" Foreground="{StaticResource Uyari}"/>
+                            <TextBlock Text="Klavyeyi aynı anda kontrol ettikleri için renkler çakışabilir." FontSize="12"
+                                       Foreground="{StaticResource IkincilMetin}" TextWrapping="Wrap" Margin="0,4,0,8"/>
+                            <Button x:Name="YanIcueKapat" Content="iCUE'yu kapat" Style="{StaticResource TemelDugme}" Padding="10,5"
+                                    HorizontalAlignment="Left"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Background="{StaticResource Kart}" BorderBrush="{StaticResource Cizgi}" BorderThickness="1"
+                            CornerRadius="10" Padding="12,10">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse x:Name="DurumNoktasi" Width="9" Height="9" Fill="{StaticResource Tehlike}" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="DurumYazisi" Text="Klavye aranıyor…" Margin="8,0,0,0" FontSize="13"/>
+                            </StackPanel>
+                            <TextBlock x:Name="EtkinProfilYazisi" FontSize="12" Foreground="{StaticResource SolukMetin}"
+                                       Margin="17,4,0,0" TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <StackPanel Margin="12,0">
+                    <RadioButton x:Name="MenuAydinlatma" Content="Aydınlatma" Tag="&#xE790;" Style="{StaticResource MenuDugmesi}" IsChecked="True"/>
+                    <RadioButton x:Name="MenuProfiller" Content="Profiller" Tag="&#xE77B;" Style="{StaticResource MenuDugmesi}"/>
+                    <RadioButton x:Name="MenuOtomatik" Content="Zamanlama" Tag="&#xE823;" Style="{StaticResource MenuDugmesi}"/>
+                    <RadioButton x:Name="MenuKisayollar" Content="Kısayollar" Tag="&#xE765;" Style="{StaticResource MenuDugmesi}"/>
+                    <RadioButton x:Name="MenuMakrolar" Content="Makrolar (G1–G6)" Tag="&#xE768;" Style="{StaticResource MenuDugmesi}"/>
+                    <RadioButton x:Name="MenuAyarlar" Content="Ayarlar" Tag="&#xE713;" Style="{StaticResource MenuDugmesi}"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- İçerik -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40"/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" WindowChrome.IsHitTestVisibleInChrome="True">
+                <Button x:Name="KucultDugmesi" Content="&#xE921;" Style="{StaticResource BaslikDugmesi}" ToolTip="Simge durumuna küçült"/>
+                <Button x:Name="BuyutDugmesi" Content="&#xE922;" Style="{StaticResource BaslikDugmesi}" ToolTip="Ekranı kapla"/>
+                <Button x:Name="KapatDugmesi" Content="&#xE8BB;" Style="{StaticResource KapatDugmesi}" ToolTip="Kapat"/>
+            </StackPanel>
+
+            <!-- Aydınlatma -->
+            <ScrollViewer x:Name="SayfaAydinlatma" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="34,0,34,34">
+                    <TextBlock Text="Aydınlatma" Style="{StaticResource SayfaBasligi}"/>
+                    <TextBlock Text="Bir profil seçin, efektini ve renklerini ayarlayın. Değişiklikler anında klavyeye uygulanır."
+                               Style="{StaticResource Aciklama}" FontSize="13" Margin="0,4,0,20"/>
+
+                    <WrapPanel x:Name="ProfilHaplari"/>
+
+                    <Border x:Name="OtomatikBandi" Background="{StaticResource VurguZemin}" CornerRadius="10" Padding="14,10"
+                            Margin="0,4,0,12" Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE945;" FontFamily="{StaticResource Simgeler}" Foreground="{StaticResource VurguAcik}"
+                                       VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <TextBlock x:Name="OtomatikYazisi" TextWrapping="Wrap" FontSize="13" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border x:Name="KarartmaBandi" Background="{StaticResource UyariZemin}" CornerRadius="10" Padding="14,8"
+                            Margin="0,4,0,12" Visibility="Collapsed">
+                        <Grid>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE706;" FontFamily="{StaticResource Simgeler}" Foreground="{StaticResource Uyari}"
+                                           VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                <TextBlock x:Name="KarartmaYazisi" TextWrapping="Wrap" FontSize="13" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <Button x:Name="IsiklariAcDugmesi" Content="Işıkları aç" Style="{StaticResource TemelDugme}"
+                                    HorizontalAlignment="Right" Padding="12,4"/>
+                        </Grid>
+                    </Border>
+
+                    <Border Style="{StaticResource KartKutusu}" Padding="16" Margin="0,4,0,0" ClipToBounds="True">
+                        <yerel:KlavyeOnizleme x:Name="Onizleme" Height="265"/>
+                    </Border>
+
+                    <Grid Margin="0,22,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="22"/>
+                            <ColumnDefinition Width="330"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel>
+                            <TextBlock Text="EFEKT" Style="{StaticResource BolumBasligi}"/>
+                            <WrapPanel x:Name="EfektKartlari"/>
+                        </StackPanel>
+
+                        <Border Grid.Column="2" Style="{StaticResource KartKutusu}" VerticalAlignment="Top">
+                            <StackPanel>
+                                <Grid>
+                                    <TextBlock Text="PARLAKLIK" Style="{StaticResource BolumBasligi}"/>
+                                    <TextBlock x:Name="ParlaklikDegeri" HorizontalAlignment="Right" FontSize="13" Foreground="{StaticResource IkincilMetin}"/>
+                                </Grid>
+                                <Slider x:Name="ParlaklikCubugu" Minimum="0" Maximum="100" SmallChange="1" LargeChange="10"/>
+
+                                <Grid Margin="0,18,0,0">
+                                    <TextBlock x:Name="HizBasligi" Text="EFEKT HIZI" Style="{StaticResource BolumBasligi}"/>
+                                    <TextBlock x:Name="HizDegeri" HorizontalAlignment="Right" FontSize="13" Foreground="{StaticResource IkincilMetin}"/>
+                                </Grid>
+                                <Slider x:Name="HizCubugu" Minimum="1" Maximum="10" SmallChange="1" LargeChange="1" IsSnapToTickEnabled="True" TickFrequency="1"/>
+
+                                <Border Height="1" Background="{StaticResource Cizgi}" Margin="0,20,0,18"/>
+
+                                <StackPanel x:Name="BolgeBolumu">
+                                    <TextBlock Text="BÖLGE" Style="{StaticResource BolumBasligi}"/>
+                                    <UniformGrid x:Name="BolgeDugmeleri" Columns="6"/>
+                                    <TextBlock Text="Önizlemede bir bölgeye tıklayarak da seçebilirsiniz." Style="{StaticResource Aciklama}"
+                                               Margin="0,8,0,16"/>
+                                </StackPanel>
+
+                                <StackPanel x:Name="MuzikBolumu">
+                                    <CheckBox x:Name="GokkusagiAnahtari" Style="{StaticResource Anahtar}" Margin="0,0,0,16">
+                                        <StackPanel>
+                                            <TextBlock Text="Gökkuşağı renkleri"/>
+                                            <TextBlock Text="Kapalıysa tüm bölgeler seçtiğiniz renkte yanar." Style="{StaticResource Aciklama}"/>
+                                        </StackPanel>
+                                    </CheckBox>
+                                </StackPanel>
+
+                                <StackPanel x:Name="TepkiRenkleri" Orientation="Horizontal" Margin="0,0,0,14">
+                                    <RadioButton x:Name="TabanRengiSecimi" Content="Taban rengi" Style="{StaticResource ProfilHapi}" GroupName="tepkiRengi" IsChecked="True"/>
+                                    <RadioButton x:Name="TepkiRengiSecimi" Content="Tepki rengi" Style="{StaticResource ProfilHapi}" GroupName="tepkiRengi"/>
+                                </StackPanel>
+
+                                <StackPanel x:Name="GostergeBolumu">
+                                    <TextBlock Text="KAYNAK" Style="{StaticResource BolumBasligi}"/>
+                                    <ComboBox x:Name="GostergeKaynakKutusu"/>
+                                    <Grid x:Name="GostergeAraligi" Margin="0,14,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="70"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="70"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Yeşil" FontSize="13" Foreground="{StaticResource IkincilMetin}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <TextBox x:Name="GostergeAltKutusu" Grid.Column="1" TextAlignment="Center" MaxLength="4"/>
+                                        <TextBlock Grid.Column="2" Text="Kırmızı" FontSize="13" Foreground="{StaticResource IkincilMetin}" VerticalAlignment="Center" Margin="14,0,8,0"/>
+                                        <TextBox x:Name="GostergeUstKutusu" Grid.Column="3" TextAlignment="Center" MaxLength="4"/>
+                                        <TextBlock x:Name="GostergeBirimi" Grid.Column="4" FontSize="13" Foreground="{StaticResource IkincilMetin}" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                    </Grid>
+                                    <TextBlock x:Name="GostergeSimdi" FontSize="20" FontWeight="SemiBold" Margin="0,16,0,2"/>
+                                    <TextBlock x:Name="GostergeNotu" Style="{StaticResource Aciklama}" Margin="0,4,0,14"/>
+                                </StackPanel>
+
+                                <StackPanel x:Name="RenkBolumu">
+                                    <TextBlock x:Name="RenkBasligi" Text="RENK" Style="{StaticResource BolumBasligi}"/>
+                                    <yerel:RenkSecici x:Name="Secici"/>
+                                </StackPanel>
+
+                                <TextBlock x:Name="ModBilgisi" Style="{StaticResource Aciklama}" FontSize="13" Margin="0,8,0,0"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Profiller -->
+            <ScrollViewer x:Name="SayfaProfiller" Grid.Row="1" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="34,0,34,34">
+                    <TextBlock Text="Profiller" Style="{StaticResource SayfaBasligi}"/>
+                    <TextBlock Text="Farklı durumlar için ayrı aydınlatma ayarları saklayın. Bir profile program bağlarsanız o program açılınca profil kendiliğinden devreye girer."
+                               Style="{StaticResource Aciklama}" FontSize="13" Margin="0,4,0,20"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="300"/>
+                            <ColumnDefinition Width="22"/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel>
+                            <StackPanel x:Name="ProfilListesi"/>
+                            <Button x:Name="YeniProfilDugmesi" Style="{StaticResource BirincilDugme}" HorizontalAlignment="Stretch" Margin="0,4,0,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE710;" FontFamily="{StaticResource Simgeler}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Yeni profil"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+
+                        <Border Grid.Column="2" Style="{StaticResource KartKutusu}" VerticalAlignment="Top">
+                            <StackPanel>
+                                <TextBlock Text="PROFİL ADI" Style="{StaticResource BolumBasligi}"/>
+                                <TextBox x:Name="ProfilAdiKutusu" FontSize="15" MaxLength="40"/>
+                                <WrapPanel Margin="0,14,0,0">
+                                    <Button x:Name="ProfiliKullanDugmesi" Content="Bu profili kullan" Style="{StaticResource BirincilDugme}" Margin="0,0,8,8"/>
+                                    <Button x:Name="DuzenleDugmesi" Content="Aydınlatmasını düzenle" Style="{StaticResource TemelDugme}" Margin="0,0,8,8"/>
+                                    <Button x:Name="CogaltDugmesi" Content="Çoğalt" Style="{StaticResource TemelDugme}" Margin="0,0,8,8"/>
+                                    <Button x:Name="SilDugmesi" Content="Sil" Style="{StaticResource TehlikeDugme}" Margin="0,0,8,8"/>
+                                </WrapPanel>
+
+                                <Border Height="1" Background="{StaticResource Cizgi}" Margin="0,14,0,18"/>
+
+                                <TextBlock Text="OTOMATİK GEÇİŞ" Style="{StaticResource BolumBasligi}"/>
+                                <TextBlock Style="{StaticResource Aciklama}" FontSize="13" Margin="0,0,0,12"
+                                           Text="Aşağıdaki programlardan biri açıldığında bu profil otomatik olarak etkinleşir; program kapanınca seçili profilinize geri dönülür."/>
+                                <WrapPanel x:Name="UygulamaListesi"/>
+                                <TextBlock x:Name="UygulamaYok" Text="Henüz program eklenmedi." Style="{StaticResource Aciklama}" Margin="0,0,0,10"/>
+
+                                <Grid Margin="0,4,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox x:Name="UygulamaKutusu"/>
+                                    <TextBlock x:Name="UygulamaIpucu" Text="Program adı, örn. cs2.exe" Foreground="{StaticResource SolukMetin}"
+                                               FontSize="13" Margin="10,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                                    <Button x:Name="UygulamaEkleDugmesi" Grid.Column="1" Content="Ekle" Style="{StaticResource TemelDugme}" Margin="8,0,0,0"/>
+                                    <Button x:Name="GozatDugmesi" Grid.Column="2" Content="Gözat…" Style="{StaticResource TemelDugme}" Margin="8,0,0,0"/>
+                                </Grid>
+
+                                <Grid Margin="0,22,0,0">
+                                    <TextBlock Text="ŞU AN AÇIK PROGRAMLAR" Style="{StaticResource BolumBasligi}"/>
+                                    <Button x:Name="YenileDugmesi" HorizontalAlignment="Right" VerticalAlignment="Top" Style="{StaticResource TemelDugme}"
+                                            Padding="10,3" FontSize="12" Content="Yenile" Margin="0,-4,0,0"/>
+                                </Grid>
+                                <TextBlock Text="Eklemek için bir programa tıklayın." Style="{StaticResource Aciklama}" Margin="0,0,0,10"/>
+                                <WrapPanel x:Name="AcikProgramlar"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Zamanlama ve otomatik kapatma -->
+            <ScrollViewer x:Name="SayfaOtomatik" Grid.Row="1" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="34,0,34,34" MaxWidth="820" HorizontalAlignment="Left">
+                    <TextBlock Text="Zamanlama" Style="{StaticResource SayfaBasligi}"/>
+                    <TextBlock Text="Belirli saatlerde profil değiştirin, kullanmadığınızda ışıkları kendiliğinden kapatın."
+                               Style="{StaticResource Aciklama}" FontSize="13" Margin="0,4,0,20"/>
+
+                    <Border Style="{StaticResource KartKutusu}">
+                        <StackPanel>
+                            <TextBlock Text="ZAMANLANMIŞ PROFİLLER" Style="{StaticResource BolumBasligi}"/>
+                            <TextBlock Style="{StaticResource Aciklama}" FontSize="13" Margin="0,0,0,14"
+                                       Text="Belirtilen saatler arasında seçilen profil devreye girer; süre bitince seçili profilinize dönülür. Profile bağlı bir program açıksa o öncelikli olur."/>
+                            <StackPanel x:Name="KuralListesi"/>
+                            <TextBlock x:Name="KuralYok" Text="Henüz zamanlama eklenmedi." Style="{StaticResource Aciklama}" Margin="0,0,0,12"/>
+                            <Button x:Name="KuralEkleDugmesi" Style="{StaticResource BirincilDugme}" HorizontalAlignment="Left">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE710;" FontFamily="{StaticResource Simgeler}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Zamanlama ekle"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource KartKutusu}" Margin="0,16,0,0">
+                        <StackPanel>
+                            <TextBlock Text="IŞIKLARI OTOMATİK KAPAT" Style="{StaticResource BolumBasligi}"/>
+                            <CheckBox x:Name="KilitAnahtari" Style="{StaticResource Anahtar}">
+                                <StackPanel>
+                                    <TextBlock Text="Ekran kilitlenince"/>
+                                    <TextBlock Text="Windows + L ile kilitlediğinizde ışıklar söner, kilidi açınca geri gelir." Style="{StaticResource Aciklama}"/>
+                                </StackPanel>
+                            </CheckBox>
+                            <Border Height="1" Background="{StaticResource Cizgi}" Margin="0,14"/>
+                            <CheckBox x:Name="EkranAnahtari" Style="{StaticResource Anahtar}">
+                                <StackPanel>
+                                    <TextBlock Text="Monitör kapanınca"/>
+                                    <TextBlock Text="Windows ekranı kapattığında (güç ayarlarındaki süre dolunca) ışıklar da söner." Style="{StaticResource Aciklama}"/>
+                                </StackPanel>
+                            </CheckBox>
+                            <Border Height="1" Background="{StaticResource Cizgi}" Margin="0,14"/>
+                            <CheckBox x:Name="BostaAnahtari" Style="{StaticResource Anahtar}">
+                                <StackPanel>
+                                    <TextBlock Text="Bilgisayar boşta kalınca"/>
+                                    <TextBlock Text="Klavye ve fare belirli bir süre kullanılmazsa ışıklar söner, bir tuşa basınca geri gelir." Style="{StaticResource Aciklama}"/>
+                                </StackPanel>
+                            </CheckBox>
+                            <Grid x:Name="BostaSureAlani" Margin="0,14,64,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition/>
+                                    <ColumnDefinition Width="70"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Bekleme süresi" FontSize="13" Foreground="{StaticResource IkincilMetin}"
+                                           VerticalAlignment="Center" Margin="0,0,16,0"/>
+                                <Slider x:Name="BostaCubugu" Grid.Column="1" Minimum="1" Maximum="60" SmallChange="1" LargeChange="5"
+                                        IsSnapToTickEnabled="True" TickFrequency="1" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="BostaDegeri" Grid.Column="2" FontSize="13" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Kısayollar -->
+            <ScrollViewer x:Name="SayfaKisayollar" Grid.Row="1" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="34,0,34,34" MaxWidth="820" HorizontalAlignment="Left">
+                    <TextBlock Text="Kısayollar" Style="{StaticResource SayfaBasligi}"/>
+                    <TextBlock Text="Pencere kapalıyken bile, hangi programda olursanız olun çalışan tuş kombinasyonları."
+                               Style="{StaticResource Aciklama}" FontSize="13" Margin="0,4,0,20"/>
+
+                    <Border Style="{StaticResource KartKutusu}">
+                        <StackPanel>
+                            <CheckBox x:Name="KisayolAnahtari" Style="{StaticResource Anahtar}">
+                                <StackPanel>
+                                    <TextBlock Text="Kısayolları etkinleştir"/>
+                                    <TextBlock Text="Kısayola basınca ekranın altında kısa bir bildirim görünür." Style="{StaticResource Aciklama}"/>
+                                </StackPanel>
+                            </CheckBox>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource KartKutusu}" Margin="0,16,0,0">
+                        <StackPanel>
+                            <Grid>
+                                <TextBlock Text="TUŞ ATAMALARI" Style="{StaticResource BolumBasligi}"/>
+                                <Button x:Name="KisayolSifirlaDugmesi" Content="Varsayılanlara dön" Style="{StaticResource TemelDugme}"
+                                        HorizontalAlignment="Right" VerticalAlignment="Top" Padding="10,3" FontSize="12" Margin="0,-4,0,0"/>
+                            </Grid>
+                            <TextBlock Style="{StaticResource Aciklama}" FontSize="13" Margin="0,0,0,14"
+                                       Text="Değiştirmek için bir kutuya tıklayıp yeni tuş kombinasyonuna basın. En az bir Ctrl, Alt veya Windows tuşu içermelidir. Esc vazgeçer, Delete kısayolu kaldırır."/>
+                            <StackPanel x:Name="KisayolListesi"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Makrolar -->
+            <ScrollViewer x:Name="SayfaMakrolar" Grid.Row="1" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="34,0,34,34">
+                    <TextBlock Text="Makrolar" Style="{StaticResource SayfaBasligi}"/>
+                    <TextBlock Text="Klavyenin solundaki G1–G6 tuşlarına eylem atayın. Bir G tuşuna bastığınızda o tuşun kartı burada kısa süre yanar."
+                               Style="{StaticResource Aciklama}" FontSize="13" Margin="0,4,0,20"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="300"/>
+                            <ColumnDefinition Width="22"/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel>
+                            <StackPanel x:Name="GListesi"/>
+                            <Border Background="{StaticResource Kart}" BorderBrush="{StaticResource Cizgi}" BorderThickness="1"
+                                    CornerRadius="10" Padding="12,10" Margin="0,4,0,0">
+                                <TextBlock Style="{StaticResource Aciklama}"
+                                           Text="G tuşları yalnızca K55 Kontrol açıkken ve klavye onun kontrolündeyken çalışır. Yönetici olarak çalışan programlara tuş gönderilemez."/>
+                            </Border>
+                        </StackPanel>
+
+                        <Border Grid.Column="2" Style="{StaticResource KartKutusu}" VerticalAlignment="Top">
+                            <StackPanel>
+                                <TextBlock x:Name="GBaslik" FontSize="20" FontWeight="SemiBold"/>
+                                <TextBlock Text="EYLEM" Style="{StaticResource BolumBasligi}" Margin="0,16,0,10"/>
+                                <ComboBox x:Name="GTurKutusu"/>
+
+                                <StackPanel x:Name="GPanelKombinasyon" Margin="0,20,0,0">
+                                    <TextBlock Text="TUŞ KOMBİNASYONU" Style="{StaticResource BolumBasligi}"/>
+                                    <Button x:Name="GKombinasyonDugmesi" Style="{StaticResource TemelDugme}" MinWidth="240"
+                                            HorizontalAlignment="Left" FontFamily="Segoe UI Semibold" Padding="14,9"/>
+                                    <TextBlock Style="{StaticResource Aciklama}" Margin="0,8,0,0"
+                                               Text="Tıklayıp göndermek istediğiniz tuşlara basın (ör. Ctrl + Shift + Esc). Esc vazgeçer."/>
+                                </StackPanel>
+
+                                <StackPanel x:Name="GPanelMetin" Margin="0,20,0,0">
+                                    <TextBlock Text="YAZILACAK METİN" Style="{StaticResource BolumBasligi}"/>
+                                    <TextBox x:Name="GMetinKutusu" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="90" MaxLength="2000"/>
+                                    <TextBlock Text="G tuşuna basınca bu metin, imlecin olduğu yere yazılır. Satır sonları Enter olarak gönderilir."
+                                               Style="{StaticResource Aciklama}" Margin="0,8,0,0"/>
+                                </StackPanel>
+
+                                <StackPanel x:Name="GPanelProgram" Margin="0,20,0,0">
+                                    <TextBlock Text="PROGRAM, DOSYA YA DA WEB ADRESİ" Style="{StaticResource BolumBasligi}"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox x:Name="GYolKutusu"/>
+                                        <Button x:Name="GGozatDugmesi" Grid.Column="1" Content="Gözat…" Style="{StaticResource TemelDugme}" Margin="8,0,0,0"/>
+                                    </Grid>
+                                    <TextBlock Text="Örnek: C:\Program Files\...\program.exe ya da https://www.youtube.com"
+                                               Style="{StaticResource Aciklama}" Margin="0,8,0,0"/>
+                                </StackPanel>
+
+                                <StackPanel x:Name="GPanelMedya" Margin="0,20,0,0">
+                                    <TextBlock Text="MEDYA TUŞU" Style="{StaticResource BolumBasligi}"/>
+                                    <ComboBox x:Name="GMedyaKutusu"/>
+                                </StackPanel>
+
+                                <StackPanel x:Name="GPanelEylem" Margin="0,20,0,0">
+                                    <TextBlock Text="K55 KONTROL EYLEMİ" Style="{StaticResource BolumBasligi}"/>
+                                    <ComboBox x:Name="GEylemKutusu"/>
+                                </StackPanel>
+
+                                <StackPanel x:Name="GPanelMakro" Margin="0,20,0,0">
+                                    <TextBlock Text="KAYDEDİLMİŞ MAKRO" Style="{StaticResource BolumBasligi}"/>
+                                    <TextBlock x:Name="GMakroOzeti" FontSize="14" Margin="0,0,0,10"/>
+                                    <WrapPanel x:Name="GMakroAdimlari" Margin="0,0,0,6"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                        <Button x:Name="GKayitDugmesi" Style="{StaticResource BirincilDugme}" Content="Kaydı başlat"/>
+                                        <Button x:Name="GMakroTemizleDugmesi" Style="{StaticResource TemelDugme}" Content="Temizle" Margin="8,0,0,0"/>
+                                    </StackPanel>
+                                    <CheckBox x:Name="GGecikmeAnahtari" Style="{StaticResource Anahtar}" Margin="0,16,0,0" IsChecked="True">
+                                        <StackPanel>
+                                            <TextBlock Text="Bekleme sürelerini kaydet"/>
+                                            <TextBlock Text="Kapalıysa tuşlar arka arkaya, hızlıca gönderilir." Style="{StaticResource Aciklama}"/>
+                                        </StackPanel>
+                                    </CheckBox>
+                                    <TextBlock Style="{StaticResource Aciklama}" Margin="0,12,0,0"
+                                               Text="Kayıt sırasında bastığınız tuşlar, aralarındaki sürelerle birlikte sırayla kaydedilir. İsterseniz kaydı başlatıp başka bir pencerede de tuşlara basabilirsiniz."/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Ayarlar -->
+            <ScrollViewer x:Name="SayfaAyarlar" Grid.Row="1" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="34,0,34,34" MaxWidth="760" HorizontalAlignment="Left">
+                    <TextBlock Text="Ayarlar" Style="{StaticResource SayfaBasligi}" Margin="0,0,0,20"/>
+
+                    <Border Style="{StaticResource KartKutusu}">
+                        <StackPanel>
+                            <TextBlock Text="GENEL" Style="{StaticResource BolumBasligi}"/>
+                            <CheckBox x:Name="BaslangicAnahtari" Style="{StaticResource Anahtar}">
+                                <StackPanel>
+                                    <TextBlock Text="Windows açılınca başlat"/>
+                                    <TextBlock Text="Bilgisayar açıldığında sistem tepsisinde sessizce başlar." Style="{StaticResource Aciklama}"/>
+                                </StackPanel>
+                            </CheckBox>
+                            <Border Height="1" Background="{StaticResource Cizgi}" Margin="0,14"/>
+                            <CheckBox x:Name="TepsiAnahtari" Style="{StaticResource Anahtar}">
+                                <StackPanel>
+                                    <TextBlock Text="Kapatınca sistem tepsisinde çalışmaya devam et"/>
+                                    <TextBlock Text="Efektlerin sürmesi için uygulamanın arka planda açık kalması gerekir." Style="{StaticResource Aciklama}"/>
+                                </StackPanel>
+                            </CheckBox>
+                            <Border Height="1" Background="{StaticResource Cizgi}" Margin="0,14"/>
+                            <CheckBox x:Name="OtomatikAnahtari" Style="{StaticResource Anahtar}">
+                                <StackPanel>
+                                    <TextBlock Text="Programa göre otomatik profil geçişi"/>
+                                    <TextBlock Text="Profillere bağlı programlar açılınca ilgili profile geçilir." Style="{StaticResource Aciklama}"/>
+                                </StackPanel>
+                            </CheckBox>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource KartKutusu}" Margin="0,16,0,0">
+                        <StackPanel>
+                            <TextBlock Text="iCUE" Style="{StaticResource BolumBasligi}"/>
+                            <TextBlock x:Name="IcueDurumu" FontSize="14"/>
+                            <TextBlock Text="iCUE ve K55 Kontrol aynı anda çalışırsa ikisi de klavyeye yazar ve renkler çakışır. iCUE'yu kalıcı olarak devre dışı bırakmak için Görev Yöneticisi → Başlangıç sekmesini kullanabilirsiniz."
+                                       Style="{StaticResource Aciklama}" Margin="0,6,0,12"/>
+                            <Button x:Name="IcueKapatDugmesi" Content="iCUE'yu şimdi kapat" Style="{StaticResource TemelDugme}" HorizontalAlignment="Left"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource KartKutusu}" Margin="0,16,0,0">
+                        <StackPanel>
+                            <TextBlock Text="HAKKINDA" Style="{StaticResource BolumBasligi}"/>
+                            <TextBlock Text="K55 Kontrol 2.0" FontSize="15" FontWeight="SemiBold"/>
+                            <TextBlock Text="Corsair K55 RGB PRO için hafif, Türkçe aydınlatma uygulaması." Style="{StaticResource Aciklama}" FontSize="13" Margin="0,4,0,0"/>
+                            <TextBlock x:Name="CihazBilgisi" Style="{StaticResource Aciklama}" FontSize="13" Margin="0,8,0,12"/>
+                            <Button x:Name="KlasorDugmesi" Content="Ayar klasörünü aç" Style="{StaticResource TemelDugme}" HorizontalAlignment="Left"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</Window>

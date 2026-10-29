@@ -1,0 +1,9 @@
+# Derleme çıktıları
+bin/
+obj/
+*_wpftmp.csproj
+
+# Geçici dosyalar
+*.tmp
+*.user
+.vs/

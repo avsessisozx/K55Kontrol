@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Klasik (SDK'sız) WPF projesi: Visual Studio derleme araçlarıyla, .NET Framework 4.8 hedefleme paketi olmadan derlenir. -->
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
+    <OutputType>WinExe</OutputType>
+    <AssemblyName>K55Kontrol</AssemblyName>
+    <RootNamespace>K55Kontrol</RootNamespace>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <!-- Hedefleme paketi kurulu değil; Windows'taki .NET Framework derlemelerine başvur. -->
+    <FrameworkPathOverride>$(WINDIR)\Microsoft.NET\Framework64\v4.0.30319</FrameworkPathOverride>
+    <LangVersion>latest</LangVersion>
+    <PlatformTarget>x64</PlatformTarget>
+    <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
+    <OutputPath>bin\</OutputPath>
+    <IntermediateOutputPath>obj\</IntermediateOutputPath>
+    <ApplicationIcon>assets\K55Kontrol.ico</ApplicationIcon>
+    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <WpfKlasoru>$(WINDIR)\Microsoft.NET\Framework64\v4.0.30319\WPF</WpfKlasoru>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase"><HintPath>$(WpfKlasoru)\WindowsBase.dll</HintPath></Reference>
+    <Reference Include="PresentationCore"><HintPath>$(WpfKlasoru)\PresentationCore.dll</HintPath></Reference>
+    <Reference Include="PresentationFramework"><HintPath>$(WpfKlasoru)\PresentationFramework.dll</HintPath></Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="src\*.cs" />
+    <Compile Include="ui\*.cs" />
+    <ApplicationDefinition Include="ui\App.xaml" />
+    <Page Include="ui\Tema.xaml" />
+    <Page Include="ui\AnaPencere.xaml" />
+    <Resource Include="assets\K55Kontrol.ico" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
