@@ -98,24 +98,22 @@
 
                     <Border x:Name="OtomatikBandi" Background="{StaticResource VurguZemin}" CornerRadius="10" Padding="14,10"
                             Margin="0,4,0,12" Visibility="Collapsed">
-                        <StackPanel Orientation="Horizontal">
+                        <DockPanel>
                             <TextBlock Text="&#xE945;" FontFamily="{StaticResource Simgeler}" Foreground="{StaticResource VurguAcik}"
-                                       VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                       VerticalAlignment="Center" Margin="0,0,10,0" DockPanel.Dock="Left"/>
                             <TextBlock x:Name="OtomatikYazisi" TextWrapping="Wrap" FontSize="13" VerticalAlignment="Center"/>
-                        </StackPanel>
+                        </DockPanel>
                     </Border>
 
                     <Border x:Name="KarartmaBandi" Background="{StaticResource UyariZemin}" CornerRadius="10" Padding="14,8"
                             Margin="0,4,0,12" Visibility="Collapsed">
-                        <Grid>
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="&#xE706;" FontFamily="{StaticResource Simgeler}" Foreground="{StaticResource Uyari}"
-                                           VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                <TextBlock x:Name="KarartmaYazisi" TextWrapping="Wrap" FontSize="13" VerticalAlignment="Center"/>
-                            </StackPanel>
+                        <DockPanel>
+                            <TextBlock Text="&#xE706;" FontFamily="{StaticResource Simgeler}" Foreground="{StaticResource Uyari}"
+                                       VerticalAlignment="Center" Margin="0,0,10,0" DockPanel.Dock="Left"/>
                             <Button x:Name="IsiklariAcDugmesi" Content="Işıkları aç" Style="{StaticResource TemelDugme}"
-                                    HorizontalAlignment="Right" Padding="12,4"/>
-                        </Grid>
+                                    Padding="12,4" Margin="12,0,0,0" DockPanel.Dock="Right" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="KarartmaYazisi" TextWrapping="Wrap" FontSize="13" VerticalAlignment="Center"/>
+                        </DockPanel>
                     </Border>
 
                     <Border Style="{StaticResource KartKutusu}" Padding="16" Margin="0,4,0,0" ClipToBounds="True">
