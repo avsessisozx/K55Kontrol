@@ -79,11 +79,24 @@ namespace K55Kontrol
         // Veri düzlemsel: önce tüm R, sonra tüm G, sonra tüm B.
         public void RenkleriYaz(Renk[] bolgeler)
         {
+            byte[] veri = IsikVerisi(bolgeler, Gosterge);
+            lock (kilit)
+            {
+                hid.GelenleriTemizle();
+                Gonder(KOMUT_ISLEM_BASLAT, 0x00, AydinlatmaUcNoktasi);
+                BlokYaz(0x00, veri);
+                Gonder(KOMUT_ISLEM_BITIR, 0x01, 0x00);
+            }
+        }
+
+        // Bölge renklerini 0x01 uç noktasının düzlemsel verisine çevirir: önce 6 ışığın R'leri, sonra G'leri, sonra B'leri.
+        internal static byte[] IsikVerisi(Renk[] bolgeler, Renk gosterge)
+        {
             Renk[] renkler = bolgeler;
             if (bolgeler.Length != IsikSayisi)
             {
                 renkler = new Renk[IsikSayisi];
-                renkler[0] = Gosterge;
+                renkler[0] = gosterge;
                 Array.Copy(bolgeler, 0, renkler, 1, Math.Min(bolgeler.Length, BolgeSayisi));
             }
             int n = renkler.Length;
@@ -94,14 +107,7 @@ namespace K55Kontrol
                 veri[n + i] = renkler[i].G;
                 veri[2 * n + i] = renkler[i].B;
             }
-
-            lock (kilit)
-            {
-                hid.GelenleriTemizle();
-                Gonder(KOMUT_ISLEM_BASLAT, 0x00, AydinlatmaUcNoktasi);
-                BlokYaz(0x00, veri);
-                Gonder(KOMUT_ISLEM_BITIR, 0x01, 0x00);
-            }
+            return veri;
         }
 
         // Klavyenin dahili hafızasındaki donanım aydınlatması dosyası (iCUE'nun "cihaz hafızası" kaydı).

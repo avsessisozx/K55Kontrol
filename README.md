@@ -74,6 +74,7 @@ Visual Studio 2019 ya da 2022 derleme araçları (MSBuild) gerekir; .NET Framewo
 - `ProtokolTesti.exe`: bölgeleri sırayla yakıp klavye protokolünü dener
 - `KaynakTesti.exe`: efekt veri kaynaklarını (ses, ekran, CPU/RAM/GPU) klavyeye dokunmadan dener
 - `TusGozlemi.exe [saniye] [dosya]`: klavyenin ham HID raporlarını ve tuş basışlarını kaydeder
+- `BirimTesti.exe`: klavyeye dokunmadan ışık eşlemesini, hafıza verisini (iCUE'nun yazdığı baytlarla) ve ayarları denetler; derle.cmd her derlemede çalıştırır
 - `IsikTesti.exe [saniye]`: 6 ışığın her birini ayrı renkte yakar (ışıkların konumunu bulmak için)
 - `HafizaTesti.exe [RRGGBB]`: klavye hafızasına sabit bir renk yazar ve klavyeyi kendi moduna geçirir
 
