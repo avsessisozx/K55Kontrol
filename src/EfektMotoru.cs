@@ -44,9 +44,41 @@ namespace K55Kontrol
             uyandir.Set();
         }
 
+        // Klavyenin hafızasındaki donanım aydınlatmasını yazar. Hata yoksa null, varsa açıklamasını döndürür.
+        // Arayüzü bekletmemek için arka planda çağrılmalıdır; K55 kendi kilidiyle kare gönderimiyle sıraya girer.
+        public string HafizayaYaz(byte[] veri)
+        {
+            K55 k = klavye;
+            if (k == null || !k.Bagli) return "Klavye bağlı değil.";
+            try
+            {
+                k.DonanimAydinlatmasiniYaz(veri);
+                return null;
+            }
+            catch (Exception ex) { return ex.Message; }
+            finally
+            {
+                // Yazma klavyeyi yazılım moduna alır; döngü doğru modu yeniden kursun.
+                yazilimaGecildi = true;
+                Guncelle();
+            }
+        }
+
+        // Klavyeyi kısa süreliğine kendi moduna alır ki hafızadaki efekt görülebilsin.
+        public void DonanimOnizle(TimeSpan sure)
+        {
+            Interlocked.Exchange(ref onizlemeBitisi, saat.ElapsedMilliseconds + (long)sure.TotalMilliseconds);
+            Guncelle();
+        }
+
+        public bool Onizlemede => saat.ElapsedMilliseconds < Interlocked.Read(ref onizlemeBitisi);
+
+        private readonly Stopwatch saat = Stopwatch.StartNew();
+        private long onizlemeBitisi;
+        private volatile bool yazilimaGecildi;
+
         private void Dongu()
         {
-            Stopwatch saat = Stopwatch.StartNew();
             Renk[] son = null, cikti = null, gecisKaynagi = null;
             long sonGonderim = 0, sonDeneme = -YenidenDenemeMs, gecisBaslangici = 0;
             bool donanimda = false;
@@ -100,7 +132,13 @@ namespace K55Kontrol
                 {
                     try
                     {
-                        if (mod == Mod.Donanim)
+                        if (yazilimaGecildi)
+                        {
+                            yazilimaGecildi = false;
+                            donanimda = false;
+                            son = null;
+                        }
+                        if (mod == Mod.Donanim || Onizlemede)
                         {
                             if (!donanimda)
                             {
@@ -129,7 +167,7 @@ namespace K55Kontrol
                     catch (ObjectDisposedException) { Kapat(); Bildir(); }
                 }
 
-                uyandir.WaitOne(Efektler.Animasyonlu(mod) || geciste ? KareSuresiMs : 250);
+                uyandir.WaitOne(Efektler.Animasyonlu(mod) || geciste || Onizlemede ? KareSuresiMs : 250);
             }
             Kapat();
         }

@@ -44,6 +44,7 @@ namespace K55Kontrol
         private EkranBildirimi bildirim;
         private DispatcherTimer kayitZamanlayici;
         private DispatcherTimer saniyeZamanlayici;
+        private DispatcherTimer hafizaZamanlayici;
         private Profil bastirilanOtomatik;
         private ZamanKurali etkinKural;
         private volatile Profil etkinOnbellek;
@@ -80,9 +81,20 @@ namespace K55Kontrol
 
             etkinKural = EtkinKuraliBul();
             etkinOnbellek = Ayarlar.SeciliProfil;
+            hafizaZamanlayici = new DispatcherTimer { Interval = TimeSpan.FromSeconds(4) };
+            hafizaZamanlayici.Tick += delegate { hafizaZamanlayici.Stop(); OtomatikHafizayiYaz(false); };
+
             Kaynaklar = new EfektKaynaklari();
             Motor = new EfektMotoru(() => etkinOnbellek, Kaynaklar);
-            Motor.BaglantiDegisti += delegate { Dispatcher.BeginInvoke(new Action(DurumuBildir)); };
+            Motor.BaglantiDegisti += delegate
+            {
+                Dispatcher.BeginInvoke(new Action(delegate
+                {
+                    DurumuBildir();
+                    // Klavye (yeniden) bağlandı: otomatik kayıt açıksa hafızayı güncel tut.
+                    if (Motor.Bagli && Ayarlar.HafizaOtomatik) { hafizaZamanlayici.Stop(); hafizaZamanlayici.Start(); }
+                }));
+            };
 
             Izleyici = new UygulamaIzleyici(() => Ayarlar.Profiller);
             Izleyici.Degisti += delegate { Dispatcher.BeginInvoke(new Action(Yenile)); };
@@ -199,8 +211,54 @@ namespace K55Kontrol
         {
             kayitZamanlayici.Stop();
             kayitZamanlayici.Start();
+            if (Ayarlar.HafizaOtomatik)
+            {
+                hafizaZamanlayici.Stop();
+                hafizaZamanlayici.Start();
+            }
             etkinKural = EtkinKuraliBul();
             Yenile();
+        }
+
+        // ================= Klavye hafızası =================
+
+        // Hafıza yazıldığında ya da yazılamadığında (arayüz iş parçacığında) bildirir: null = başarılı, aksi halde hata.
+        public event Action<string> HafizaYazildi;
+
+        // Verilen aydınlatmayı klavyenin hafızasına yazar. Aynı veri zaten yazılıysa (zorla değilse) atlar.
+        // eszamanli: çıkışta olduğu gibi işlem bitene kadar bekler.
+        public void HafizayaYaz(DonanimAydinlatmasi d, bool zorla, bool eszamanli = false)
+        {
+            if (d == null) return;
+            byte[] veri = d.Veri();
+            string hex = BitConverter.ToString(veri);
+            if (!zorla && hex == Ayarlar.SonYazilanHafiza) return;
+
+            Action<string> bitti = hata =>
+            {
+                if (hata == null)
+                {
+                    Ayarlar.SonYazilanHafiza = hex;
+                    Ayarlar.Kaydet();
+                }
+                Action<string> olay = HafizaYazildi;
+                if (olay != null) olay(hata);
+            };
+
+            if (eszamanli)
+            {
+                bitti(Motor.HafizayaYaz(veri));
+                return;
+            }
+            System.Threading.Tasks.Task.Run(() => Motor.HafizayaYaz(veri))
+                .ContinueWith(t => Dispatcher.BeginInvoke(new Action(delegate { bitti(t.Result); })));
+        }
+
+        // Otomatik kayıt açıksa kullanıcının seçtiği profili (geçici otomatik profilleri değil) hafızaya yazar.
+        private void OtomatikHafizayiYaz(bool eszamanli)
+        {
+            if (!Ayarlar.HafizaOtomatik) return;
+            HafizayaYaz(DonanimAydinlatmasi.ProfildenOlustur(Ayarlar.SeciliProfil), false, eszamanli);
         }
 
         public void ProfillerDegisti()
@@ -318,8 +376,7 @@ namespace K55Kontrol
             if (olay != null) olay(n);
             if (GAtamalariDuraklatildi) return;
 
-            GAtama a = Ayarlar.GAtamalari.FirstOrDefault(x => x.Tus == n);
-            if (a == null) return;
+            GAtama a = Ayarlar.GecerliAtama(EtkinProfil, n);
             try
             {
                 switch (a.Tur)
@@ -427,6 +484,11 @@ namespace K55Kontrol
             if (tepsi != null) tepsi.Visible = false;
             if (Sistem != null) Sistem.Dispose();
             if (GTuslari != null) GTuslari.Dispose();
+            if (Motor != null && Ayarlar != null)
+            {
+                hafizaZamanlayici.Stop();
+                try { OtomatikHafizayiYaz(true); } catch (Exception) { }
+            }
             if (Izleyici != null) Izleyici.Dispose();
             if (Motor != null) Motor.Dispose();     // klavyeyi kendi moduna bırakır
             if (Kaynaklar != null) Kaynaklar.Dispose();

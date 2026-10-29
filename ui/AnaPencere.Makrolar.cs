@@ -19,6 +19,7 @@ namespace K55Kontrol
         private readonly Border[] gRozetleri = new Border[GTuslari.TusSayisi];
         private bool gKombinasyonYakalaniyor;
         private MakroKaydedici kaydedici;
+        private Profil gKapsam;   // null: genel atamalar düzenleniyor
 
         private static readonly GTuru[] GTurleri =
             { GTuru.Yok, GTuru.TusKombinasyonu, GTuru.Metin, GTuru.Program, GTuru.Medya, GTuru.UygulamaEylemi, GTuru.Makro };
@@ -37,7 +38,16 @@ namespace K55Kontrol
             }
         }
 
-        private GAtama SeciliAtama => Ayar.GAtamaBul(seciliG);
+        // Düzenleyicide gösterilen atama. Profil kapsamında özel atama yoksa genel atama (salt okunur) gösterilir.
+        private GAtama SeciliAtama => KapsamAtamasi(seciliG);
+
+        private GAtama KapsamAtamasi(int tus) => gKapsam == null ? Ayar.GAtamaBul(tus) : Ayar.GecerliAtama(gKapsam, tus);
+
+        private string KartOzeti(int tus)
+        {
+            if (gKapsam == null || Ayarlar.OzelAtama(gKapsam, tus) != null) return Ozet(KapsamAtamasi(tus));
+            return "Genel: " + Ozet(Ayar.GAtamaBul(tus));
+        }
 
         private void MakrolarSayfasiniKur()
         {
@@ -108,6 +118,22 @@ namespace K55Kontrol
                 if (d.ShowDialog(this) == true) GYolKutusu.Text = d.FileName;
             };
 
+            GKapsamKutusu.SelectionChanged += delegate
+            {
+                if (yukleniyor || !(GKapsamKutusu.SelectedItem is ComboBoxItem oge)) return;
+                gKapsam = oge.Tag as Profil;
+                MakrolariYukle();
+            };
+            GOzelAnahtari.Click += delegate
+            {
+                if (gKapsam == null) return;
+                gKapsam.GAtamalari.RemoveAll(x => x.Tus == seciliG);
+                // Özel atama genel atamanın kopyasıyla başlar; oradan değiştirilir.
+                if (GOzelAnahtari.IsChecked == true) gKapsam.GAtamalari.Add(Ayar.GAtamaBul(seciliG).Kopya());
+                Ana.Degisti();
+                MakrolariYukle();
+            };
+
             GKombinasyonDugmesi.Click += delegate { GKombinasyonYakalamayaBasla(); };
             PreviewKeyDown += GKombinasyonYakala;
             Deactivated += delegate { if (gKombinasyonYakalaniyor) GKombinasyonYakalamayiBitir(); };
@@ -124,15 +150,40 @@ namespace K55Kontrol
 
         private void MakrolariYukle()
         {
+            if (gKapsam != null && !Ayar.Profiller.Contains(gKapsam)) gKapsam = null;
+            yukleniyor = true;
+            try
+            {
+                GKapsamKutusu.Items.Clear();
+                GKapsamKutusu.Items.Add(new ComboBoxItem { Content = "Tüm profiller (genel)" });
+                foreach (Profil p in Ayar.Profiller)
+                {
+                    int ozel = p.GAtamalari.Count;
+                    GKapsamKutusu.Items.Add(new ComboBoxItem { Content = "Profil: " + p.Ad + (ozel > 0 ? "  (" + ozel + " özel)" : ""), Tag = p });
+                }
+                GKapsamKutusu.SelectedItem = GKapsamKutusu.Items.OfType<ComboBoxItem>().First(o => o.Tag == gKapsam);
+            }
+            finally { yukleniyor = false; }
+            GKapsamNotu.Text = gKapsam == null
+                ? "Bu atamalar, kendine özel ataması olmayan her profilde geçerlidir."
+                : "“" + gKapsam.Ad + "” etkinken (elle seçilince ya da uygulaması açılınca) özel atanan tuşlar genel atamanın yerine geçer.";
+
             if (gKartlari[seciliG - 1].IsChecked != true) gKartlari[seciliG - 1].IsChecked = true;
-            for (int i = 0; i < GTuslari.TusSayisi; i++) gOzetleri[i].Text = Ozet(Ayar.GAtamaBul(i + 1));
+            for (int i = 0; i < GTuslari.TusSayisi; i++) GKartiniYaz(i + 1);
             GDuzenleyiciyiYukle();
+        }
+
+        private void GKartiniYaz(int tus)
+        {
+            bool ozel = gKapsam != null && Ayarlar.OzelAtama(gKapsam, tus) != null;
+            gOzetleri[tus - 1].Text = KartOzeti(tus);
+            gOzetleri[tus - 1].Foreground = (Brush)FindResource(ozel ? "VurguAcik" : "SolukMetin");
         }
 
         private void GDegisti(bool yenidenYukle = true)
         {
             Ana.Degisti();
-            gOzetleri[seciliG - 1].Text = Ozet(SeciliAtama);
+            GKartiniYaz(seciliG);
             if (yenidenYukle) GDuzenleyiciyiYukle();
         }
 
@@ -142,7 +193,17 @@ namespace K55Kontrol
             yukleniyor = true;
             try
             {
-                GBaslik.Text = "G" + seciliG + " tuşu";
+                GBaslik.Text = "G" + seciliG + " tuşu" + (gKapsam == null ? "" : " · " + gKapsam.Ad);
+                bool ozel = gKapsam != null && Ayarlar.OzelAtama(gKapsam, seciliG) != null;
+                GOzelAnahtari.Visibility = gKapsam == null ? Visibility.Collapsed : Visibility.Visible;
+                GOzelAnahtari.IsChecked = ozel;
+                GOzelBasligi.Text = "Bu profilde farklı bir eylem ata";
+                GOzelNotu.Text = ozel
+                    ? "Kapatırsanız bu profilde de genel atama kullanılır."
+                    : "Şu an genel atama kullanılıyor: " + Ozet(Ayar.GAtamaBul(seciliG));
+                bool duzenlenebilir = gKapsam == null || ozel;
+                GDuzenleyici.IsEnabled = duzenlenebilir;
+                GDuzenleyici.Opacity = duzenlenebilir ? 1 : 0.55;
                 GTurKutusu.SelectedItem = GTurKutusu.Items.OfType<ComboBoxItem>().First(o => (GTuru)o.Tag == a.Tur);
 
                 GPanelKombinasyon.Visibility = a.Tur == GTuru.TusKombinasyonu ? Visibility.Visible : Visibility.Collapsed;
@@ -248,7 +309,7 @@ namespace K55Kontrol
             a.Vk = KeyInterop.VirtualKeyFromKey(tus);
             a.Degistirici = degistirici;
             Ana.Degisti();
-            gOzetleri[seciliG - 1].Text = Ozet(a);
+            GKartiniYaz(seciliG);
             GKombinasyonYakalamayiBitir();
         }
 
@@ -261,6 +322,7 @@ namespace K55Kontrol
             kaydedici = new MakroKaydedici();
             kaydedici.AdimEklendi += delegate { MakroyuGoster(kaydedici.Adimlar, true); };
             kaydedici.Baslat();
+            GKapsamKutusu.IsEnabled = GOzelAnahtari.IsEnabled = false;
             GKayitDugmesi.Content = "● Kaydı durdur";
             GKayitDugmesi.Background = (Brush)FindResource("Tehlike");
             GKayitDugmesi.BorderBrush = (Brush)FindResource("Tehlike");
@@ -286,6 +348,7 @@ namespace K55Kontrol
             GKayitDugmesi.ClearValue(Button.BackgroundProperty);
             GKayitDugmesi.ClearValue(Button.BorderBrushProperty);
             GMakroTemizleDugmesi.IsEnabled = true;
+            GKapsamKutusu.IsEnabled = GOzelAnahtari.IsEnabled = true;
             GDegisti();
         }
 

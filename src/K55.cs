@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading;
 
 namespace K55Kontrol
@@ -9,7 +10,9 @@ namespace K55Kontrol
     {
         public const ushort VID = 0x1B1C;
         public const ushort PID = 0x1BA4;
-        public const int BolgeSayisi = 6;
+        // Klavyede 6 ışık var: 0 numaralı ışık Windows kilidi / makro kaydı göstergesi, 1–5 soldan sağa tuş bölgeleri.
+        public const int IsikSayisi = 6;
+        public const int BolgeSayisi = 5;
 
         private const int Arayuz = 1;
         private const ushort UsagePage = 0xFF42;
@@ -30,7 +33,7 @@ namespace K55Kontrol
 
         private readonly HidCihaz hid;
         private readonly int raporBoyu;
-        private byte aydinlatmaUcNoktasi = 0x22;
+        private const byte AydinlatmaUcNoktasi = 0x01;
         private readonly object kilit = new object();
 
         private K55(HidCihaz hid)
@@ -47,25 +50,16 @@ namespace K55Kontrol
 
         public bool Bagli { get { return hid.Bagli; } }
         public string Yol { get { return hid.Yol; } }
-        public byte UcNoktasi { get { return aydinlatmaUcNoktasi; } }
+        public byte UcNoktasi { get { return AydinlatmaUcNoktasi; } }
 
-        // Yazılım moduna geçer ve kullanılabilir aydınlatma uç noktasını belirler.
+        // Yazılım moduna geçer. Bu klavyede (iCUE de dahil) anlık aydınlatma 0x01 uç noktasına düzlemsel R/G/B
+        // olarak yazılır; 0x22 uç noktası başka (üçlü) bir veri biçimi beklediği için kullanılmaz.
         public void YazilimModunaGec()
         {
             lock (kilit)
             {
                 Gonder(KOMUT_AYARLA, OZELLIK_MOD, 0x00, MOD_YAZILIM);
                 Gonder(KOMUT_OKU, 0x5F);
-
-                // Bazı cihazlar 0x22 uç noktasını desteklemez; hata dönerse 0x01'e düş.
-                aydinlatmaUcNoktasi = 0x22;
-                byte sonuc = Gonder(KOMUT_ISLEM_BASLAT, 0x00, aydinlatmaUcNoktasi);
-                if (sonuc != 0)
-                {
-                    aydinlatmaUcNoktasi = 0x01;
-                    Gonder(KOMUT_ISLEM_BASLAT, 0x00, aydinlatmaUcNoktasi);
-                }
-                Gonder(KOMUT_ISLEM_BITIR, 0x01, 0x00);
             }
         }
 
@@ -78,9 +72,20 @@ namespace K55Kontrol
             }
         }
 
-        // Her bölge için bir renk gönderir. Veri düzlemsel: önce tüm R, sonra tüm G, sonra tüm B.
-        public void RenkleriYaz(Renk[] renkler)
+        // Gösterge ışığının (Windows kilidi) yazılım modundaki rengi.
+        public Renk Gosterge { get; set; }
+
+        // Her tuş bölgesi için bir renk gönderir (ya da IsikSayisi kadar renkle ışıkları doğrudan yazar).
+        // Veri düzlemsel: önce tüm R, sonra tüm G, sonra tüm B.
+        public void RenkleriYaz(Renk[] bolgeler)
         {
+            Renk[] renkler = bolgeler;
+            if (bolgeler.Length != IsikSayisi)
+            {
+                renkler = new Renk[IsikSayisi];
+                renkler[0] = Gosterge;
+                Array.Copy(bolgeler, 0, renkler, 1, Math.Min(bolgeler.Length, BolgeSayisi));
+            }
             int n = renkler.Length;
             byte[] veri = new byte[n * 3];
             for (int i = 0; i < n; i++)
@@ -93,45 +98,91 @@ namespace K55Kontrol
             lock (kilit)
             {
                 hid.GelenleriTemizle();
-                Gonder(KOMUT_ISLEM_BASLAT, 0x00, aydinlatmaUcNoktasi);
-
-                byte[] rapor = new byte[raporBoyu];
-                rapor[1] = YazmaKimligi;
-                rapor[2] = KOMUT_BLOK_ILK;
-                rapor[4] = (byte)(veri.Length & 0xFF);
-                rapor[5] = (byte)(veri.Length >> 8);
-                int kopya = Math.Min(veri.Length, raporBoyu - 8);
-                Buffer.BlockCopy(veri, 0, rapor, 8, kopya);
-                hid.Yaz(rapor);
-                hid.Oku(5);
-
-                int gonderilen = kopya;
-                while (gonderilen < veri.Length)
-                {
-                    rapor = new byte[raporBoyu];
-                    rapor[1] = YazmaKimligi;
-                    rapor[2] = KOMUT_BLOK_DEVAM;
-                    kopya = Math.Min(veri.Length - gonderilen, raporBoyu - 4);
-                    Buffer.BlockCopy(veri, gonderilen, rapor, 4, kopya);
-                    hid.Yaz(rapor);
-                    Thread.Sleep(2);
-                    gonderilen += kopya;
-                }
-
+                Gonder(KOMUT_ISLEM_BASLAT, 0x00, AydinlatmaUcNoktasi);
+                BlokYaz(0x00, veri);
                 Gonder(KOMUT_ISLEM_BITIR, 0x01, 0x00);
+            }
+        }
+
+        // Klavyenin dahili hafızasındaki donanım aydınlatması dosyası (iCUE'nun "cihaz hafızası" kaydı).
+        // Uygulama kapalıyken ve klavye kendi modundayken bu dosyadaki efekt oynatılır.
+        private const byte HafizaTutamaci = 0x01;
+        private static readonly byte[] AydinlatmaDosyasi = { 0x61, 0x6D };   // dosya 0x6D61
+        private const byte KOMUT_DOSYA_TEMIZLE = 0x09;
+
+        // Dosyayı açar, içeriğini siler, veriyi yazar ve kapatır. Dosya işlemleri yalnızca yazılım modunda kabul
+        // edildiği için önce o moda geçilir; klavyeyi kendi moduna döndürmek çağırana kalır.
+        // Cevap biçimi: [0]=rapor kimliği, [1]=0, [2]=komutun yankısı, [3]=durum (0 = başarılı).
+        public void DonanimAydinlatmasiniYaz(byte[] veri)
+        {
+            lock (kilit)
+            {
+                hid.GelenleriTemizle();
+                Gonder(KOMUT_AYARLA, OZELLIK_MOD, 0x00, MOD_YAZILIM);
+                Denetle(GonderCevap(KOMUT_ISLEM_BASLAT, HafizaTutamaci, AydinlatmaDosyasi[0], AydinlatmaDosyasi[1]), "hafıza dosyası açılamadı");
+                try
+                {
+                    Denetle(GonderCevap(KOMUT_DOSYA_TEMIZLE, HafizaTutamaci), "hafıza dosyası temizlenemedi");
+                    BlokYaz(HafizaTutamaci, veri);
+                }
+                finally
+                {
+                    GonderCevap(KOMUT_ISLEM_BITIR, 0x01, HafizaTutamaci);
+                }
+            }
+        }
+
+        private static void Denetle(byte[] cevap, string islem)
+        {
+            if (cevap == null) throw new IOException("Klavye cevap vermedi (" + islem + ").");
+            if (cevap.Length > 3 && cevap[3] != 0)
+                throw new IOException("Klavye isteği reddetti (" + islem + ", kod " + cevap[3] + ").");
+        }
+
+        // Veriyi verilen tutamaca blok halinde yazar: ilk pakette 4 baytlık uzunluk, sonra devam paketleri.
+        private void BlokYaz(byte tutamac, byte[] veri)
+        {
+            byte[] rapor = new byte[raporBoyu];
+            rapor[1] = YazmaKimligi;
+            rapor[2] = KOMUT_BLOK_ILK;
+            rapor[3] = tutamac;
+            rapor[4] = (byte)(veri.Length & 0xFF);
+            rapor[5] = (byte)(veri.Length >> 8);
+            int kopya = Math.Min(veri.Length, raporBoyu - 8);
+            Buffer.BlockCopy(veri, 0, rapor, 8, kopya);
+            hid.Yaz(rapor);
+            hid.Oku(5);
+
+            int gonderilen = kopya;
+            while (gonderilen < veri.Length)
+            {
+                rapor = new byte[raporBoyu];
+                rapor[1] = YazmaKimligi;
+                rapor[2] = KOMUT_BLOK_DEVAM;
+                rapor[3] = tutamac;
+                kopya = Math.Min(veri.Length - gonderilen, raporBoyu - 4);
+                Buffer.BlockCopy(veri, gonderilen, rapor, 4, kopya);
+                hid.Yaz(rapor);
+                Thread.Sleep(2);
+                gonderilen += kopya;
             }
         }
 
         // Komut gönderir, cevabın durum baytını döndürür (0 = başarılı, 0xFF = cevap yok).
         private byte Gonder(byte komut, params byte[] parametreler)
         {
+            byte[] cevap = GonderCevap(komut, parametreler);
+            return (cevap != null && cevap.Length > 2) ? cevap[2] : (byte)0xFF;
+        }
+
+        private byte[] GonderCevap(byte komut, params byte[] parametreler)
+        {
             byte[] rapor = new byte[raporBoyu];
             rapor[1] = YazmaKimligi;
             rapor[2] = komut;
             Buffer.BlockCopy(parametreler, 0, rapor, 3, parametreler.Length);
             hid.Yaz(rapor);
-            byte[] cevap = hid.Oku(CevapBekleme);
-            return (cevap != null && cevap.Length > 2) ? cevap[2] : (byte)0xFF;
+            return hid.Oku(CevapBekleme);
         }
 
         public void Dispose()

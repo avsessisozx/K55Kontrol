@@ -40,6 +40,7 @@ namespace K55Kontrol
         [DataMember(Order = 9)] public string GostergeKaynagi;
         [DataMember(Order = 10)] public int GostergeAlt;
         [DataMember(Order = 11)] public int GostergeUst;
+        [DataMember(Order = 12)] public List<GAtama> GAtamalari;   // bu profile özel G tuşları; olmayan tuşlarda genel atama geçerli
 
         public Profil()
         {
@@ -57,8 +58,8 @@ namespace K55Kontrol
             AnaRenk = new Renk(255, 0, 0);
             BolgeRenkleri = new[]
             {
-                new Renk(255, 0, 0), new Renk(255, 140, 0), new Renk(255, 230, 0),
-                new Renk(0, 220, 80), new Renk(0, 170, 255), new Renk(200, 0, 255)
+                new Renk(255, 0, 0), new Renk(255, 200, 0), new Renk(0, 220, 80),
+                new Renk(0, 170, 255), new Renk(200, 0, 255)
             };
             Parlaklik = 100;
             Hiz = 5;
@@ -68,6 +69,7 @@ namespace K55Kontrol
             GostergeKaynagi = SistemGostergesi.Cpu;
             GostergeAlt = 0;
             GostergeUst = 100;
+            GAtamalari = new List<GAtama>();
         }
 
         public Profil Kopyala(string yeniAd)
@@ -84,7 +86,8 @@ namespace K55Kontrol
                 MuzikGokkusagi = MuzikGokkusagi,
                 GostergeKaynagi = GostergeKaynagi,
                 GostergeAlt = GostergeAlt,
-                GostergeUst = GostergeUst
+                GostergeUst = GostergeUst,
+                GAtamalari = GAtamalari.Select(g => g.Kopya()).ToList()
             };
         }
 
@@ -95,8 +98,10 @@ namespace K55Kontrol
             Renk[] varsayilan = new Profil().BolgeRenkleri;
             if (BolgeRenkleri == null || BolgeRenkleri.Length != K55.BolgeSayisi)
             {
+                // Eski sürümler 6 renk tutuyordu; ilki gösterge ışığına gidiyordu, tuş bölgeleri 2–6. renklerdi.
+                int atla = BolgeRenkleri != null && BolgeRenkleri.Length == K55.IsikSayisi ? 1 : 0;
                 if (BolgeRenkleri != null)
-                    Array.Copy(BolgeRenkleri, varsayilan, Math.Min(BolgeRenkleri.Length, varsayilan.Length));
+                    Array.Copy(BolgeRenkleri, atla, varsayilan, 0, Math.Min(BolgeRenkleri.Length - atla, varsayilan.Length));
                 BolgeRenkleri = varsayilan;
             }
             Parlaklik = Math.Max(0, Math.Min(100, Parlaklik));
@@ -105,6 +110,9 @@ namespace K55Kontrol
             if (Uygulamalar == null) Uygulamalar = new List<string>();
             if (string.IsNullOrEmpty(GostergeKaynagi)) GostergeKaynagi = SistemGostergesi.Cpu;
             if (GostergeUst <= GostergeAlt) { GostergeAlt = 0; GostergeUst = 100; }
+            if (GAtamalari == null) GAtamalari = new List<GAtama>();
+            GAtamalari.RemoveAll(g => g == null || g.Tus < 1 || g.Tus > GTuslari.TusSayisi);
+            foreach (GAtama g in GAtamalari) if (g.Adimlar == null) g.Adimlar = new List<MakroAdimi>();
         }
     }
 
@@ -187,6 +195,9 @@ namespace K55Kontrol
         [DataMember(Order = 9)] public bool KisayollarEtkin;
         [DataMember(Order = 10)] public List<Kisayol> Kisayollar;
         [DataMember(Order = 11)] public List<GAtama> GAtamalari;
+        [DataMember(Order = 12)] public DonanimAydinlatmasi Hafiza;            // elle ayarlanan hafıza aydınlatması
+        [DataMember(Order = 13)] public bool HafizaOtomatik;                    // etkin profili kendiliğinden hafızaya yaz
+        [DataMember(Order = 14)] public string SonYazilanHafiza;                // aynı veriyi tekrar yazmamak için (hex)
 
         private static readonly string Klasor = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "K55Kontrol");
@@ -216,6 +227,8 @@ namespace K55Kontrol
             KisayollarEtkin = true;
             Kisayollar = Kisayol.Varsayilanlar();
             GAtamalari = new List<GAtama>();
+            Hafiza = new DonanimAydinlatmasi();
+            HafizaOtomatik = true;
         }
 
         // Bir G tuşunun atamasını döndürür; yoksa boş bir atama oluşturur.
@@ -230,6 +243,12 @@ namespace K55Kontrol
             if (a.Adimlar == null) a.Adimlar = new List<MakroAdimi>();
             return a;
         }
+
+        // Profilin o G tuşu için özel ataması; yoksa null.
+        public static GAtama OzelAtama(Profil p, int tus) => p.GAtamalari.FirstOrDefault(x => x.Tus == tus);
+
+        // G tuşuna basılınca çalışacak atama: önce profile özel olan, yoksa genel olan.
+        public GAtama GecerliAtama(Profil p, int tus) => OzelAtama(p, tus) ?? GAtamaBul(tus);
 
         public Profil SeciliProfil
         {
@@ -258,7 +277,7 @@ namespace K55Kontrol
             foreach (ZamanKurali k in Zamanlamalar)
                 if (string.Equals(k.ProfilAdi, eski, StringComparison.CurrentCultureIgnoreCase))
                     k.ProfilAdi = yeni;
-            foreach (GAtama g in GAtamalari)
+            foreach (GAtama g in GAtamalari.Concat(Profiller.SelectMany(p => p.GAtamalari)))
                 if (string.Equals(g.UygulamaEylemi, GAtama.ProfilAnahtari(eski), StringComparison.CurrentCultureIgnoreCase))
                     g.UygulamaEylemi = GAtama.ProfilAnahtari(yeni);
         }
@@ -294,6 +313,7 @@ namespace K55Kontrol
             a.Zamanlamalar.RemoveAll(z => z == null);
             if (a.Kisayollar == null) a.Kisayollar = Kisayol.Varsayilanlar();
             a.Kisayollar.RemoveAll(k => k == null);
+            if (a.Hafiza == null) a.Hafiza = new DonanimAydinlatmasi();
             if (a.GAtamalari == null) a.GAtamalari = new List<GAtama>();
             a.GAtamalari.RemoveAll(g => g == null || g.Tus < 1 || g.Tus > GTuslari.TusSayisi);
             a.BostaDakika = Math.Max(1, Math.Min(120, a.BostaDakika));

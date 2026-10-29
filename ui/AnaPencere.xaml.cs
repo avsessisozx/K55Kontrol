@@ -74,6 +74,7 @@ namespace K55Kontrol
             OtomatikSayfasiniKur();
             KisayollarSayfasiniKur();
             MakrolarSayfasiniKur();
+            HafizaSayfasiniKur();
             IsiklariAcDugmesi.Click += delegate { Ana.IsiklariAcKapat(false); };
 
             Ana.DurumDegisti += DurumuYenile;
@@ -127,6 +128,8 @@ namespace K55Kontrol
                 SayfaOtomatik.Visibility = MenuOtomatik.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
                 SayfaKisayollar.Visibility = MenuKisayollar.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
                 SayfaMakrolar.Visibility = MenuMakrolar.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+                SayfaHafiza.Visibility = MenuHafiza.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+                if (MenuHafiza.IsChecked == true) HafizaSayfasiniYukle();
                 if (MenuMakrolar.IsChecked == true) MakrolariYukle();
                 SayfaAyarlar.Visibility = MenuAyarlar.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
                 if (MenuProfiller.IsChecked == true) { ProfilListesiniYenile(true); AcikProgramlariYenile(); }
@@ -139,6 +142,7 @@ namespace K55Kontrol
             MenuOtomatik.Checked += degistir;
             MenuKisayollar.Checked += degistir;
             MenuMakrolar.Checked += degistir;
+            MenuHafiza.Checked += degistir;
             MenuAyarlar.Checked += degistir;
         }
 
@@ -351,7 +355,7 @@ namespace K55Kontrol
                         ModBilgisi.Text = "Bilgisayardan çıkan sesi dinler; mikrofon kullanılmaz. Soldaki bölgeler basa, sağdakiler tiz seslere tepki verir.";
                         break;
                     case Mod.Ekran:
-                        ModBilgisi.Text = "Ana ekran 6 dikey şeride bölünür; her şeridin rengi klavyede aynı konumdaki bölgeye yansır. Ekran görüntüsü kaydedilmez. Tam ekran çalışan bazı oyunlarda siyah kalabilir.";
+                        ModBilgisi.Text = "Ana ekran 5 dikey şeride bölünür; her şeridin rengi klavyede aynı konumdaki bölgeye yansır. Ekran görüntüsü kaydedilmez. Tam ekran çalışan bazı oyunlarda siyah kalabilir.";
                         break;
                     case Mod.TusTepkisi:
                         ModBilgisi.Text = "Bastığınız tuşun bulunduğu bölge tepki rengiyle parlayıp taban rengine döner. Tuşlar kaydedilmez; yalnızca hangi bölgede olduğu kullanılır.";

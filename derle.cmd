@@ -29,4 +29,11 @@ for %%m in ("%MSBUILD%") do set CSC=%%~dpmRoslyn\csc.exe
 "%CSC%" /nologo /langversion:latest /platform:x64 /target:exe /codepage:65001 /out:bin\TusGozlemi.exe ^
   /r:System.Windows.Forms.dll /r:System.Core.dll src\Hid.cs src\K55.cs src\Renk.cs test\TusGozlemi.cs || exit /b 1
 
+"%CSC%" /nologo /langversion:latest /platform:x64 /target:exe /codepage:65001 /out:bin\HafizaTesti.exe ^
+  /r:System.Runtime.Serialization.dll /r:System.Core.dll src\Hid.cs src\K55.cs src\Renk.cs src\DonanimAydinlatmasi.cs ^
+  src\Ayarlar.cs src\Makro.cs src\GTuslari.cs src\SistemGostergesi.cs test\HafizaTesti.cs || exit /b 1
+
+"%CSC%" /nologo /langversion:latest /platform:x64 /target:exe /codepage:65001 /out:bin\IsikTesti.exe ^
+  src\Hid.cs src\K55.cs src\Renk.cs test\IsikTesti.cs || exit /b 1
+
 echo Derleme tamam: bin\K55Kontrol.exe

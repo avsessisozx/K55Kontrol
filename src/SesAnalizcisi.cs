@@ -5,12 +5,12 @@ using System.Threading;
 namespace K55Kontrol
 {
     // Varsayılan ses çıkışını (hoparlör/kulaklık) WASAPI "loopback" ile dinler; mikrofon kullanılmaz.
-    // Sesi 6 frekans bandına ayırır (bas → tiz) ve her bandın 0-1 arası seviyesini yayınlar.
+    // Sesi 5 frekans bandına ayırır (bas → tiz) ve her bandın 0-1 arası seviyesini yayınlar.
     public sealed class SesAnalizcisi : IDisposable
     {
         public const int BantSayisi = K55.BolgeSayisi;
 
-        private static readonly double[] BantSinirlari = { 20, 120, 300, 800, 2000, 5000, 16000 };   // Hz
+        private static readonly double[] BantSinirlari = { 20, 150, 500, 1500, 5000, 16000 };   // Hz
         private const int FftBoyu = 2048;
 
         private Thread isParcacigi;

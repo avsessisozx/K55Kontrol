@@ -69,6 +69,7 @@
                     <RadioButton x:Name="MenuOtomatik" Content="Zamanlama" Tag="&#xE823;" Style="{StaticResource MenuDugmesi}"/>
                     <RadioButton x:Name="MenuKisayollar" Content="Kısayollar" Tag="&#xE765;" Style="{StaticResource MenuDugmesi}"/>
                     <RadioButton x:Name="MenuMakrolar" Content="Makrolar (G1–G6)" Tag="&#xE768;" Style="{StaticResource MenuDugmesi}"/>
+                    <RadioButton x:Name="MenuHafiza" Content="Klavye hafızası" Tag="&#xE74E;" Style="{StaticResource MenuDugmesi}"/>
                     <RadioButton x:Name="MenuAyarlar" Content="Ayarlar" Tag="&#xE713;" Style="{StaticResource MenuDugmesi}"/>
                 </StackPanel>
             </DockPanel>
@@ -371,7 +372,14 @@
                 <StackPanel Margin="34,0,34,34">
                     <TextBlock Text="Makrolar" Style="{StaticResource SayfaBasligi}"/>
                     <TextBlock Text="Klavyenin solundaki G1–G6 tuşlarına eylem atayın. Bir G tuşuna bastığınızda o tuşun kartı burada kısa süre yanar."
-                               Style="{StaticResource Aciklama}" FontSize="13" Margin="0,4,0,20"/>
+                               Style="{StaticResource Aciklama}" FontSize="13" Margin="0,4,0,16"/>
+                    <Border Style="{StaticResource KartKutusu}" Padding="16,12" Margin="0,0,0,16">
+                        <DockPanel>
+                            <TextBlock Text="Atamaların geçerli olduğu yer" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                            <ComboBox x:Name="GKapsamKutusu" Width="260" DockPanel.Dock="Left" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="GKapsamNotu" Style="{StaticResource Aciklama}" TextWrapping="Wrap" VerticalAlignment="Center" Margin="16,0,0,0"/>
+                        </DockPanel>
+                    </Border>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="300"/>
@@ -391,6 +399,13 @@
                         <Border Grid.Column="2" Style="{StaticResource KartKutusu}" VerticalAlignment="Top">
                             <StackPanel>
                                 <TextBlock x:Name="GBaslik" FontSize="20" FontWeight="SemiBold"/>
+                                <CheckBox x:Name="GOzelAnahtari" Style="{StaticResource Anahtar}" Margin="0,14,0,0">
+                                    <StackPanel>
+                                        <TextBlock x:Name="GOzelBasligi"/>
+                                        <TextBlock x:Name="GOzelNotu" Style="{StaticResource Aciklama}" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </CheckBox>
+                                <StackPanel x:Name="GDuzenleyici">
                                 <TextBlock Text="EYLEM" Style="{StaticResource BolumBasligi}" Margin="0,16,0,10"/>
                                 <ComboBox x:Name="GTurKutusu"/>
 
@@ -450,9 +465,114 @@
                                     <TextBlock Style="{StaticResource Aciklama}" Margin="0,12,0,0"
                                                Text="Kayıt sırasında bastığınız tuşlar, aralarındaki sürelerle birlikte sırayla kaydedilir. İsterseniz kaydı başlatıp başka bir pencerede de tuşlara basabilirsiniz."/>
                                 </StackPanel>
+                                </StackPanel>
                             </StackPanel>
                         </Border>
                     </Grid>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Klavye hafızası -->
+            <ScrollViewer x:Name="SayfaHafiza" Grid.Row="1" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="34,0,34,34" MaxWidth="900" HorizontalAlignment="Left">
+                    <TextBlock Text="Klavye hafızası" Style="{StaticResource SayfaBasligi}"/>
+                    <TextBlock Style="{StaticResource Aciklama}" FontSize="13" Margin="0,4,0,20"
+                               Text="Klavyenin kendi hafızasına bir aydınlatma kaydedin. K55 Kontrol kapalıyken, bilgisayar açılırken ya da klavye başka bir bilgisayara takıldığında bu aydınlatma görünür."/>
+
+                    <Border Style="{StaticResource KartKutusu}">
+                        <StackPanel>
+                            <CheckBox x:Name="HafizaOtomatikAnahtari" Style="{StaticResource Anahtar}">
+                                <StackPanel>
+                                    <TextBlock Text="Seçili profili otomatik olarak kaydet"/>
+                                    <TextBlock Style="{StaticResource Aciklama}"
+                                               Text="Profili değiştirdiğinizde birkaç saniye sonra ve uygulamadan çıkarken, seçili profilin hafızada saklanabilen en yakın karşılığı yazılır. Müzik, ekran rengi gibi canlı efektler hafızada saklanamaz; yerine benzer bir efekt yazılır."/>
+                                </StackPanel>
+                            </CheckBox>
+                            <Border Background="{StaticResource KartUst}" CornerRadius="10" Padding="14,10" Margin="0,14,0,0">
+                                <TextBlock x:Name="HafizaOtomatikOzet" TextWrapping="Wrap" FontSize="13"/>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <Border x:Name="HafizaElleKart" Style="{StaticResource KartKutusu}" Margin="0,16,0,0">
+                        <StackPanel>
+                            <TextBlock Text="ELLE AYARLA" Style="{StaticResource BolumBasligi}"/>
+                            <TextBlock x:Name="HafizaElleNotu" Style="{StaticResource Aciklama}" Margin="0,-4,0,14"
+                                       Text="Otomatik kayıt açıkken buradaki ayar kullanılmaz. Kendi seçiminizi kaydetmek için yukarıdaki anahtarı kapatın."/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition/>
+                                    <ColumnDefinition Width="26"/>
+                                    <ColumnDefinition Width="300"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="EFEKT" Style="{StaticResource BolumBasligi}"/>
+                                    <ComboBox x:Name="HafizaEfektKutusu"/>
+
+                                    <StackPanel x:Name="HafizaRenkTuruAlani" Margin="0,18,0,0">
+                                        <TextBlock Text="RENKLER" Style="{StaticResource BolumBasligi}"/>
+                                        <WrapPanel>
+                                            <RadioButton x:Name="HafizaRastgele" Content="Rastgele" Style="{StaticResource ProfilHapi}" GroupName="hafizaRenkTuru"/>
+                                            <RadioButton x:Name="HafizaSecili" Content="Seçtiğim renkler" Style="{StaticResource ProfilHapi}" GroupName="hafizaRenkTuru"/>
+                                        </WrapPanel>
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="HafizaRenkHedefi" Margin="0,10,0,0">
+                                        <TextBlock Text="DÜZENLENEN RENK" Style="{StaticResource BolumBasligi}"/>
+                                        <WrapPanel>
+                                            <RadioButton x:Name="HafizaRenk1Secimi" Content="1. renk" Style="{StaticResource ProfilHapi}" GroupName="hafizaRenkHedefi" IsChecked="True"/>
+                                            <RadioButton x:Name="HafizaRenk2Secimi" Content="2. renk" Style="{StaticResource ProfilHapi}" GroupName="hafizaRenkHedefi"/>
+                                        </WrapPanel>
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="HafizaHizAlani" Margin="0,10,0,0">
+                                        <TextBlock Text="HIZ" Style="{StaticResource BolumBasligi}"/>
+                                        <WrapPanel>
+                                            <RadioButton x:Name="HafizaYavas" Content="Yavaş" Style="{StaticResource ProfilHapi}" GroupName="hafizaHiz"/>
+                                            <RadioButton x:Name="HafizaOrta" Content="Orta" Style="{StaticResource ProfilHapi}" GroupName="hafizaHiz"/>
+                                            <RadioButton x:Name="HafizaHizli" Content="Hızlı" Style="{StaticResource ProfilHapi}" GroupName="hafizaHiz"/>
+                                        </WrapPanel>
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="HafizaYonAlani" Margin="0,10,0,0">
+                                        <TextBlock Text="YÖN" Style="{StaticResource BolumBasligi}"/>
+                                        <WrapPanel>
+                                            <RadioButton x:Name="HafizaSol" Content="← Sola" Style="{StaticResource ProfilHapi}" GroupName="hafizaYon"/>
+                                            <RadioButton x:Name="HafizaSag" Content="Sağa →" Style="{StaticResource ProfilHapi}" GroupName="hafizaYon"/>
+                                            <RadioButton x:Name="HafizaYukari" Content="↑ Yukarı" Style="{StaticResource ProfilHapi}" GroupName="hafizaYon"/>
+                                            <RadioButton x:Name="HafizaAsagi" Content="↓ Aşağı" Style="{StaticResource ProfilHapi}" GroupName="hafizaYon"/>
+                                        </WrapPanel>
+                                    </StackPanel>
+
+                                    <Grid Margin="0,14,0,0">
+                                        <TextBlock Text="PARLAKLIK" Style="{StaticResource BolumBasligi}"/>
+                                        <TextBlock x:Name="HafizaParlaklikDegeri" HorizontalAlignment="Right" FontSize="13" Foreground="{StaticResource IkincilMetin}"/>
+                                    </Grid>
+                                    <Slider x:Name="HafizaParlaklikCubugu" Minimum="0" Maximum="100" SmallChange="1" LargeChange="10"/>
+
+                                    <Button x:Name="HafizaProfildenDugmesi" Content="Etkin profilden doldur" Style="{StaticResource TemelDugme}"
+                                            HorizontalAlignment="Left" Margin="0,18,0,0"/>
+                                </StackPanel>
+
+                                <StackPanel x:Name="HafizaRenkAlani" Grid.Column="2">
+                                    <TextBlock x:Name="HafizaRenkBasligi" Text="RENK" Style="{StaticResource BolumBasligi}"/>
+                                    <yerel:RenkSecici x:Name="HafizaRenkSecici"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource KartKutusu}" Margin="0,16,0,0">
+                        <StackPanel>
+                            <WrapPanel>
+                                <Button x:Name="HafizaKaydetDugmesi" Content="Klavyeye kaydet" Style="{StaticResource BirincilDugme}" Margin="0,0,8,0"/>
+                                <Button x:Name="HafizaGosterDugmesi" Content="Hafızadakini klavyede göster (5 sn)" Style="{StaticResource TemelDugme}"/>
+                            </WrapPanel>
+                            <TextBlock x:Name="HafizaDurumu" FontSize="13" Margin="0,12,0,0" TextWrapping="Wrap"/>
+                            <TextBlock Style="{StaticResource Aciklama}" Margin="0,8,0,0"
+                                       Text="Hafızada tek bir efekt saklanır; bölge bölge farklı renkler saklanamaz. Hafıza yalnızca kayıt içeriği değiştiğinde yazılır."/>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
             </ScrollViewer>
 

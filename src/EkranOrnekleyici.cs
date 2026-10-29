@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace K55Kontrol
 {
-    // Ana ekranı 6 dikey şeride böler ve her şeridin ortalama rengini yayınlar (ambilight).
+    // Ana ekranı 5 dikey şeride böler ve her şeridin ortalama rengini yayınlar (ambilight).
     // Ekran küçük bir bit eşleme küçültülerek okunur; görüntü hiçbir yere kaydedilmez.
     public sealed class EkranOrnekleyici : IDisposable
     {

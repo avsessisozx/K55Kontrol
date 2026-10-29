@@ -54,6 +54,13 @@ namespace K55Kontrol
         [DataMember(Order = 7)] public string UygulamaEylemi;   // "eylem:<Eylem>" ya da "profil:<ad>"
         [DataMember(Order = 8)] public List<MakroAdimi> Adimlar;
 
+        public GAtama Kopya()
+        {
+            var a = (GAtama)MemberwiseClone();
+            a.Adimlar = Adimlar == null ? new List<MakroAdimi>() : new List<MakroAdimi>(Adimlar);
+            return a;
+        }
+
         public static string EylemAnahtari(Eylem e) => "eylem:" + e;
         public static string ProfilAnahtari(string ad) => "profil:" + ad;
     }
