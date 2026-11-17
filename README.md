@@ -1,5 +1,7 @@
 # K55 Kontrol
 
+> ⬇️ **İndir:** [Windows (ZIP)](https://github.com/avsessisozx/K55Kontrol/releases/latest/download/K55Kontrol.zip)
+
 **Corsair K55 RGB PRO** klavye için iCUE gerektirmeyen, hafif ve tamamen Türkçe aydınlatma ve makro uygulaması.
 
 ![K55 Kontrol ekran görüntüsü](docs/ekran-goruntusu.png)
