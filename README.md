@@ -59,8 +59,9 @@ yani hafızasına yazılmış aydınlatmaya döner.
 ## Bilinen sınırlamalar
 - G tuşları ve veriye dayalı efektler yalnızca K55 Kontrol açıkken çalışır.
 - Yönetici olarak çalışan programlara G tuşlarıyla tuş gönderilemez (Windows kısıtlaması).
-- Windows tuşu kilidi ve parlaklık tuşu klavyenin kendisinde çalışır; bilgisayara bilgi göndermedikleri için
-  uygulamada ayarları yoktur.
+- K55 Kontrol açıkken klavyenin parlaklık ve Windows kilidi tuşlarını iCUE gibi uygulama işler: parlaklık tuşu
+  klavyenin parlaklık kademesini her basışta bir düşürür (en parlak → … → kapalı → en parlak), kilit tuşu Windows
+  tuşu kilidini açıp kapatır (kilitliyken gösterge ışığı beyaz). Uygulama kapalıyken bu tuşları klavye kendisi işler.
 - Ekran rengi efekti, tam ekran (exclusive) çalışan bazı oyunlarda siyah kalabilir.
 - İşlemci sıcaklığı yalnızca HWiNFO "Shared Memory Support" açıkken okunabilir.
 - K55 RGB PRO'da tuş bazında RGB yoktur; aydınlatma 5 bölgeliktir.

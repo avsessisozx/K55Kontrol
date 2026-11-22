@@ -198,6 +198,7 @@ namespace K55Kontrol
         [DataMember(Order = 12)] public DonanimAydinlatmasi Hafiza;            // elle ayarlanan hafıza aydınlatması
         [DataMember(Order = 13)] public bool HafizaOtomatik;                    // etkin profili kendiliğinden hafızaya yaz
         [DataMember(Order = 14)] public string SonYazilanHafiza;                // aynı veriyi tekrar yazmamak için (hex)
+        [DataMember(Order = 15)] public bool WindowsTusuKilitli;                // oyun sırasında Windows tuşu çalışmasın
 
         private static readonly string Klasor = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "K55Kontrol");
@@ -229,6 +230,7 @@ namespace K55Kontrol
             GAtamalari = new List<GAtama>();
             Hafiza = new DonanimAydinlatmasi();
             HafizaOtomatik = true;
+            WindowsTusuKilitli = false;
         }
 
         // Bir G tuşunun atamasını döndürür; yoksa boş bir atama oluşturur.

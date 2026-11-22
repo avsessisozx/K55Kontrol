@@ -609,6 +609,19 @@
 
                     <Border Style="{StaticResource KartKutusu}" Margin="0,16,0,0">
                         <StackPanel>
+                            <TextBlock Text="KLAVYE" Style="{StaticResource BolumBasligi}"/>
+                            <CheckBox x:Name="WindowsTusuAnahtari" Style="{StaticResource Anahtar}">
+                                <StackPanel>
+                                    <TextBlock Text="Windows tuşunu kilitle"/>
+                                    <TextBlock Text="Oyun sırasında Windows tuşuna yanlışlıkla basmayı önler; Alt+Tab gibi kısayollar çalışmaya devam eder. Uygulama kapanınca kilit kendiliğinden kalkar."
+                                               Style="{StaticResource Aciklama}"/>
+                                </StackPanel>
+                            </CheckBox>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource KartKutusu}" Margin="0,16,0,0">
+                        <StackPanel>
                             <TextBlock Text="iCUE" Style="{StaticResource BolumBasligi}"/>
                             <TextBlock x:Name="IcueDurumu" FontSize="14"/>
                             <TextBlock Text="iCUE ve K55 Kontrol aynı anda çalışırsa ikisi de klavyeye yazar ve renkler çakışır. iCUE'yu kalıcı olarak devre dışı bırakmak için Görev Yöneticisi → Başlangıç sekmesini kullanabilirsiniz."

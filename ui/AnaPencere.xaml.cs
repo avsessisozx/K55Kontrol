@@ -606,6 +606,8 @@ namespace K55Kontrol
             };
             TepsiAnahtari.Click += delegate { Ayar.TepsiyeKucult = TepsiAnahtari.IsChecked == true; Ana.Degisti(); };
             OtomatikAnahtari.Click += delegate { Ayar.OtomatikGecis = OtomatikAnahtari.IsChecked == true; Ana.Degisti(); };
+            WindowsTusuAnahtari.Checked += delegate { WindowsTusuDegisti(); };
+            WindowsTusuAnahtari.Unchecked += delegate { WindowsTusuDegisti(); };
             IcueKapatDugmesi.Click += delegate { IcueyuKapat(); };
             YanIcueKapat.Click += delegate { IcueyuKapat(); };
             KlasorDugmesi.Click += delegate
@@ -616,12 +618,23 @@ namespace K55Kontrol
             };
         }
 
-        private void AyarlariYukle()
+        internal void AyarlariYukle()
         {
+            yukleniyor = true;
             BaslangicAnahtari.IsChecked = Ayarlar.WindowsIleBaslat;
             TepsiAnahtari.IsChecked = Ayar.TepsiyeKucult;
             OtomatikAnahtari.IsChecked = Ayar.OtomatikGecis;
+            WindowsTusuAnahtari.IsChecked = Ayar.WindowsTusuKilitli;
+            yukleniyor = false;
             IcueDenetle();
+        }
+
+        private void WindowsTusuDegisti()
+        {
+            if (yukleniyor) return;
+            Ayar.WindowsTusuKilitli = WindowsTusuAnahtari.IsChecked == true;
+            Ana.Motor.WindowsTusuKilitli = Ayar.WindowsTusuKilitli;
+            Ana.Degisti();
         }
 
         // ================= Efekt önizleme fırçaları =================

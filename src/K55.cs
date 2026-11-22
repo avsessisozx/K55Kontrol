@@ -29,10 +29,14 @@ namespace K55Kontrol
         private const byte MOD_DONANIM = 0x01;
         private const byte MOD_YAZILIM = 0x02;
 
+        private const byte OZELLIK_PERFORMANS = 0x45;   // oyun modu: 1 açık, 0 kapalı
+        private const byte OZELLIK_TUS_ENGELI = 0x4A;   // engellenecek tuşlar: 1 Win, 2 Alt+Tab, 4 Alt+F4, 8 Shift+Tab
+
         private const int CevapBekleme = 50;
 
         private readonly HidCihaz hid;
         private readonly int raporBoyu;
+        private bool windowsKilitli;   // bu oturumda bizim açtığımız kilit (çıkışta geri alınır)
         private const byte AydinlatmaUcNoktasi = 0x01;
         private readonly object kilit = new object();
 
@@ -69,6 +73,52 @@ namespace K55Kontrol
             lock (kilit)
             {
                 Gonder(KOMUT_AYARLA, OZELLIK_MOD, 0x00, MOD_DONANIM);
+            }
+        }
+
+        // Windows tuşunu engeller ya da serbest bırakır. Klavye bu durumu kendi belleğinde tutar; uygulama
+        // kapanırken engel kaldırılmalıdır, yoksa Windows tuşu çalışmaz.
+        // iCUE 5'in kilit tuşunda gönderdiği sıranın aynısı (2026-11-22, Frida ile yakalandı):
+        // 0x45 = 1/0, ardından 0x02 uç noktasına 137 baytlık, tamamı 0x01 olan tablo. Gösterge ışığı kilitliyken beyaz.
+        public void WindowsTusunuAyarla(bool engelle)
+        {
+            lock (kilit)
+            {
+                byte deger = engelle ? (byte)0x01 : (byte)0x00;
+                Denetle(GonderCevap(KOMUT_AYARLA, OZELLIK_PERFORMANS, 0x00, deger), "Windows tuşu kilidi");
+                hid.GelenleriTemizle();
+                Denetle(GonderCevap(KOMUT_ISLEM_BASLAT, TusTablosuTutamaci, TusTablosuUcNoktasi), "tuş tablosu açılamadı");
+                try
+                {
+                    byte[] tablo = new byte[TusTablosuBoyu];
+                    for (int i = 0; i < tablo.Length; i++) tablo[i] = 0x01;
+                    BlokYaz(TusTablosuTutamaci, tablo);
+                }
+                finally
+                {
+                    GonderCevap(KOMUT_ISLEM_BITIR, TusTablosuTutamaci, 0x01);
+                }
+                windowsKilitli = engelle;
+                Gosterge = engelle ? new Renk(255, 255, 255) : Renk.Siyah;
+            }
+        }
+
+        private const byte TusTablosuTutamaci = 0x01;
+        private const byte TusTablosuUcNoktasi = 0x02;
+        private const int TusTablosuBoyu = 137;
+        private const byte OZELLIK_PARLAKLIK_KADEMESI = 0x44;   // 3 = en parlak … 0 = kapalı
+
+        // Parlaklık tuşu: iCUE 5 her basışta kademeyi bir azaltır (3 → 2 → 1 → 0 → 3). Kademeyi klavye uygular.
+        public void ParlaklikKademesiniDegistir()
+        {
+            lock (kilit)
+            {
+                byte[] cevap = GonderCevap(KOMUT_OKU, OZELLIK_PARLAKLIK_KADEMESI);
+                Denetle(cevap, "parlaklık kademesi okunamadı");
+                int simdiki = cevap.Length > 4 ? cevap[4] : 3;
+                byte yeni = (byte)(simdiki <= 0 ? 3 : simdiki - 1);
+                Denetle(GonderCevap(KOMUT_AYARLA, OZELLIK_PARLAKLIK_KADEMESI, 0x00, yeni), "parlaklık kademesi");
+                GonderCevap(KOMUT_OKU, OZELLIK_PARLAKLIK_KADEMESI);
             }
         }
 
@@ -193,6 +243,17 @@ namespace K55Kontrol
 
         public void Dispose()
         {
+            // Kilidi biz açtıysak Windows tuşu kilitli kalmasın. Kilit komutu yalnızca yazılım modunda
+            // kabul edildiği için önce o moda geçilir; sonra klavye kendi moduna bırakılır.
+            try
+            {
+                if (Bagli && windowsKilitli)
+                {
+                    YazilimModunaGec();
+                    WindowsTusunuAyarla(false);
+                }
+            }
+            catch (Exception) { }
             try { if (Bagli) DonanimModunaGec(); } catch (Exception) { }
             hid.Dispose();
         }

@@ -14,6 +14,11 @@ namespace K55Kontrol
         public event Action<int> Basildi;      // 1-6
         public event Action<int> Birakildi;    // 1-6
 
+        // Yazılım modunda klavye bu iki tuşu kendisi işlemez, aynı rapordan bildirir (iCUE de böyle yakalar):
+        // parlaklık = rapor[17] biti 0x02, Windows kilidi = rapor[17] biti 0x04.
+        public event Action ParlaklikBasildi;
+        public event Action KilitBasildi;
+
         private const int Arayuz = 2;
         private const ushort UsagePage = 0xFF42;
         private static readonly int[] Bayt = { 19, 19, 19, 19, 19, 20 };
@@ -34,6 +39,7 @@ namespace K55Kontrol
         private void Dongu()
         {
             bool[] basili = new bool[TusSayisi];
+            bool parlaklikBasili = false, kilitBasili = false;
             while (calisiyor)
             {
                 if (!Bagli)
@@ -54,6 +60,12 @@ namespace K55Kontrol
                     Action<int> olay = simdi ? Basildi : Birakildi;
                     try { if (olay != null) olay(i + 1); } catch (Exception) { }
                 }
+
+                bool p = (r[17] & 0x02) != 0, k = (r[17] & 0x04) != 0;
+                if (p && !parlaklikBasili) { Action a = ParlaklikBasildi; try { if (a != null) a(); } catch (Exception) { } }
+                if (k && !kilitBasili) { Action a = KilitBasildi; try { if (a != null) a(); } catch (Exception) { } }
+                parlaklikBasili = p;
+                kilitBasili = k;
             }
             Kapat();
         }

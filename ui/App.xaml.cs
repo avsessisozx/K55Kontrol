@@ -86,6 +86,7 @@ namespace K55Kontrol
 
             Kaynaklar = new EfektKaynaklari();
             Motor = new EfektMotoru(() => etkinOnbellek, Kaynaklar);
+            Motor.WindowsTusuKilitli = Ayarlar.WindowsTusuKilitli;
             Motor.BaglantiDegisti += delegate
             {
                 Dispatcher.BeginInvoke(new Action(delegate
@@ -101,6 +102,14 @@ namespace K55Kontrol
 
             GTuslari = new GTuslari();
             GTuslari.Basildi += n => Dispatcher.BeginInvoke(new Action(delegate { GTusuIsle(n); }));
+            GTuslari.ParlaklikBasildi += () => Motor.ParlaklikTusunaBasildi();
+            GTuslari.KilitBasildi += () => Dispatcher.BeginInvoke(new Action(delegate
+            {
+                Ayarlar.WindowsTusuKilitli = !Ayarlar.WindowsTusuKilitli;
+                Motor.WindowsTusuKilitli = Ayarlar.WindowsTusuKilitli;
+                if (pencere != null) pencere.AyarlariYukle();
+                Degisti();
+            }));
 
             Sistem = new SistemOlaylari();
             Sistem.KilitDegisti += k => { kilitli = k; Yenile(); };

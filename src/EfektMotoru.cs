@@ -37,6 +37,14 @@ namespace K55Kontrol
 
         public bool Bagli { get { K55 k = klavye; return k != null && k.Bagli; } }
 
+        // Windows tuşu kilidi. Arayüz iş parçacığından değiştirilir; döngü klavyeye uygular.
+        private volatile bool windowsTusuKilitli;
+        public bool WindowsTusuKilitli
+        {
+            get { return windowsTusuKilitli; }
+            set { windowsTusuKilitli = value; Guncelle(); }
+        }
+
         // Ayarlar değiştiğinde çağrılır; sabit modlarda da hemen yeniden gönderim yapılır.
         public void Guncelle()
         {
@@ -76,6 +84,7 @@ namespace K55Kontrol
         private readonly Stopwatch saat = Stopwatch.StartNew();
         private long onizlemeBitisi;
         private volatile bool yazilimaGecildi;
+        private bool uygulananKilit = true;   // klavyeye uygulanmış kilit durumu (yalnızca döngü iş parçacığı kullanır)
 
         private void Dongu()
         {
@@ -98,6 +107,7 @@ namespace K55Kontrol
                     {
                         son = null;
                         donanimda = true;     // aşağıda yazılım moduna geçilmesini sağlar
+                        uygulananKilit = !windowsTusuKilitli;   // ilk karede bir kez uygulansın
                     }
                     if (oncedenVardi || klavye != null) Bildir();
                 }
@@ -132,6 +142,7 @@ namespace K55Kontrol
                 {
                     try
                     {
+                        bool kilitIstenen = windowsTusuKilitli;
                         if (yazilimaGecildi)
                         {
                             yazilimaGecildi = false;
@@ -142,8 +153,22 @@ namespace K55Kontrol
                         {
                             if (!donanimda)
                             {
+                                // Windows tuşu kilidi yalnızca yazılım modunda ayarlanabildiği için önce o uygulanır.
+                                if (uygulananKilit != kilitIstenen)
+                                {
+                                    k.YazilimModunaGec();
+                                    KilidiUygula(k, kilitIstenen);
+                                }
                                 k.DonanimModunaGec();
                                 donanimda = true;
+                                son = null;
+                            }
+                            else if (uygulananKilit != kilitIstenen)
+                            {
+                                // Donanım modundayken kilit değiştirilemez: kısa süreliğine yazılım moduna geçilir.
+                                k.YazilimModunaGec();
+                                KilidiUygula(k, kilitIstenen);
+                                k.DonanimModunaGec();
                             }
                         }
                         else
@@ -154,6 +179,7 @@ namespace K55Kontrol
                                 donanimda = false;
                                 son = null;
                             }
+                            if (uygulananKilit != kilitIstenen) KilidiUygula(k, kilitIstenen);
                             if (degisti || son == null || !Ayni(son, renkler) || simdi - sonGonderim > CanliTutmaMs)
                             {
                                 k.RenkleriYaz(renkler);
@@ -170,6 +196,26 @@ namespace K55Kontrol
                 uyandir.WaitOne(Efektler.Animasyonlu(mod) || geciste || Onizlemede ? KareSuresiMs : 250);
             }
             Kapat();
+        }
+
+        // Kilidi klavyeye uygular. Komut reddedilirse (ör. klavye beklenen modda değilse) durumu yine de
+        // uygulanmış sayarız; her karede yeniden denemek klavyeye sürekli komut göndermekten başka işe yaramaz.
+        private void KilidiUygula(K55 k, bool engelle)
+        {
+            try { k.WindowsTusunuAyarla(engelle); }
+            catch (IOException) { }
+            uygulananKilit = engelle;
+            degisti = true;   // gösterge ışığının yeni rengi hemen gönderilsin
+        }
+
+        // Klavyedeki parlaklık tuşuna basıldı (yalnız yazılım modunda gelir).
+        public void ParlaklikTusunaBasildi()
+        {
+            K55 k = klavye;
+            if (k == null) return;
+            try { k.ParlaklikKademesiniDegistir(); }
+            catch (IOException) { }
+            catch (ObjectDisposedException) { }
         }
 
         private static bool Ayni(Renk[] a, Renk[] b)
